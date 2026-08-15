@@ -393,6 +393,7 @@ footer {
 <h1 class="rgb-text">PAIR CODE</h1>
 
 <p class="status rgb-text">TYPE YOUR WHATSAPP NUMBER</p>
+<p class="status rgb-text" style="font-size:0.55rem;opacity:0.75;margin-top:-6px;">Any country works — country code + number, no + or 00<br>🇵🇰 92... · 🇮🇳 91... · 🇻🇪 58... · 🇸🇦 966... etc.</p>
 
 <!-- Input with RGB Border -->
 <div class="rgb-box">
@@ -445,18 +446,30 @@ async function getCode() {
     try {
         const res = await fetch(`/code?number=${num}`);
         const data = await res.json();
-        
+
         if (data.code) {
             codeBox.style.letterSpacing = "4px";
             codeBox.style.color = "#fff";
             codeBox.innerText = data.code;
+        } else if (data.status === "already_connected") {
+            codeBox.style.color = "#ffd93d";
+            codeBox.innerText = "ALREADY CONNECTED ✅ (use /disconnect first to re-pair)";
+        } else if (data.status === "connection_in_progress") {
+            codeBox.style.color = "#ffd93d";
+            codeBox.innerText = "ALREADY CONNECTING… WAIT A FEW SECONDS AND TRY AGAIN";
+        } else if (data.status === "reconnecting") {
+            codeBox.style.color = "#6bcb77";
+            codeBox.innerText = "RECONNECTING WITH EXISTING SESSION ✅";
+        } else if (data.error || data.message || data.details) {
+            codeBox.style.color = "#ff4d6d";
+            codeBox.innerText = "❌ " + (data.message || data.error || data.details);
         } else {
             codeBox.style.color = "#ff4d6d";
-            codeBox.innerText = "SERVER FULL";
+            codeBox.innerText = "UNKNOWN ERROR — TRY AGAIN";
         }
     } catch (e) {
         codeBox.style.color = "#ff4d6d";
-        codeBox.innerText = "SERVER IS FULL";
+        codeBox.innerText = "❌ NETWORK/SERVER ERROR — TRY AGAIN";
     }
 }
 
