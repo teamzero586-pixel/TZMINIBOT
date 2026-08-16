@@ -56,19 +56,21 @@ cmd({
     react: "👑"
 },
 async(conn, mek, m, { from, myquoted }) => {
-    const ownerNumber = config.OWNER_NUMBER;
-    
+    const brand = conn.brand || null;
+    const ownerNumber = (brand && brand.ownerNumber) || (Array.isArray(config.OWNER_NUMBER) ? config.OWNER_NUMBER[0] : config.OWNER_NUMBER);
+    const displayName = (brand && brand.botName) || 'TZ MINI BOT';
+
     // Création d'une vCard (Fiche contact)
     const vcard = 'BEGIN:VCARD\n' +
                   'VERSION:3.0\n' +
-                  'FN:TZ MINI BOT (Owner)\n' +
-                  'ORG:TZ MINI BOT;\n' +
+                  `FN:${displayName} (Owner)\n` +
+                  `ORG:${displayName};\n` +
                   `TEL;type=CELL;type=VOICE;waid=${ownerNumber}:${ownerNumber}\n` +
                   'END:VCARD';
 
     await conn.sendMessage(from, {
         contacts: {
-            displayName: 'TZ MINI BOT',
+            displayName: displayName,
             contacts: [{ vcard }]
         }
     }, { quoted: myquoted });

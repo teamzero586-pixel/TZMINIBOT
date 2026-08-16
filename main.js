@@ -19,14 +19,6 @@ const {
 // ========== SETTINGS.JS SE FETCH ==========
 const config = require('./config');
 
-// ── Branded reply helper: every text reply from any command goes out
-//    with the TZ MINI BOT image attached ──
-function brandedReply(conn, from, mek, text) {
-    const imgSrc = (config.IMAGE_PATH && fs.existsSync(config.IMAGE_PATH))
-        ? fs.readFileSync(config.IMAGE_PATH)
-        : { url: config.IMAGE_PATH };
-    return conn.sendMessage(from, { image: imgSrc, caption: text }, { quoted: mek });
-}
 const { sms } = require('./lib/msg');
 const events = require('./arslan');
 
@@ -43,7 +35,9 @@ const {
     saveOTPToMongoDB,
     verifyOTPFromMongoDB,
     incrementStats,
-    getStatsForNumber
+    getStatsForNumber,
+    saveBotBrand,
+    getBotBrand
 } = require('./lib/database');
 
 // ========== ANTI-DELETE FIXED IMPORT ==========
@@ -66,6 +60,70 @@ const pino = require('pino');
 const crypto = require('crypto');
 const FileType = require('file-type');
 const axios = require('axios');
+
+// ── Cache the default branding image once at boot instead of re-fetching
+//    the remote URL on every single command reply (big speed win) ──
+let cachedDefaultImage = null;
+(async () => {
+    try {
+        if (config.IMAGE_PATH && typeof config.IMAGE_PATH === 'string' && config.IMAGE_PATH.startsWith('http')) {
+            const resp = await axios.get(config.IMAGE_PATH, { responseType: 'arraybuffer', timeout: 10000 });
+            cachedDefaultImage = Buffer.from(resp.data);
+            console.log('🖼️  Default branding image cached in memory');
+        } else if (config.IMAGE_PATH && fs.existsSync(config.IMAGE_PATH)) {
+            cachedDefaultImage = fs.readFileSync(config.IMAGE_PATH);
+        }
+    } catch (e) {
+        console.error('⚠️ Could not cache default branding image:', e.message);
+    }
+})();
+
+// per-connection brand image cache: { [number]: Buffer }
+const brandImageCache = new Map();
+
+async function resolveBrandImage(brand) {
+    if (!brand || !brand.botImage) return cachedDefaultImage || { url: config.IMAGE_PATH };
+
+    if (brand.botImage.startsWith('data:')) {
+        // base64 data URI uploaded by the user
+        const base64 = brand.botImage.split(',')[1] || '';
+        return Buffer.from(base64, 'base64');
+    }
+
+    if (brandImageCache.has(brand.botImage)) return brandImageCache.get(brand.botImage);
+
+    try {
+        const resp = await axios.get(brand.botImage, { responseType: 'arraybuffer', timeout: 10000 });
+        const buf = Buffer.from(resp.data);
+        brandImageCache.set(brand.botImage, buf);
+        return buf;
+    } catch (e) {
+        return { url: brand.botImage }; // fall back to remote fetch by Baileys itself
+    }
+}
+
+// ── Branded reply helper: every text reply from any command goes out
+//    with the sender's own custom bot image + channel-forward tag if they
+//    set one during pairing, otherwise the default TZ MINI BOT branding ──
+async function brandedReply(conn, from, mek, text) {
+    const brand = conn.brand || null;
+    const imgSrc = await resolveBrandImage(brand);
+    const channelJid = (brand && brand.channelJid) || config.CHANNEL_JID;
+    const channelName = (brand && brand.botName) || config.BOT_NAME;
+
+    return conn.sendMessage(from, {
+        image: imgSrc,
+        caption: text,
+        contextInfo: {
+            forwardingScore: 999,
+            isForwarded: true,
+            forwardedNewsletterMessageInfo: {
+                newsletterJid: channelJid,
+                newsletterName: channelName
+            }
+        }
+    }, { quoted: mek });
+}
 const moment = require('moment-timezone');
 const chalk = require('chalk');
 
@@ -575,6 +633,13 @@ async function arslanPair(number, res = null) {
         socketCreationTime.set(sanitizedNumber, Date.now());
         activeSockets.set(sanitizedNumber, conn);
         store.bind(conn.ev);
+
+        // ========== LOAD PER-NUMBER CUSTOM BRANDING (white-label) ==========
+        try {
+            conn.brand = await getBotBrand(sanitizedNumber);
+        } catch (e) {
+            conn.brand = null;
+        }
 
         // ========== SETUP CALL HANDLERS ==========
         setupCallHandlers(conn, number);
@@ -1476,6 +1541,41 @@ router.get('/pair-status', async (req, res) => {
 // ============================================
 
 router.get('/', (req, res) => res.sendFile(path.join(__dirname, 'pair.html')));
+// ============================================
+// 🎨 WHITE-LABEL BRANDING API (per-number custom bot name/image/channel/owner)
+// ============================================
+router.post('/api/brand', async (req, res) => {
+    try {
+        const { number, botName, botImage, channelJid, ownerNumber } = req.body || {};
+        const sanitized = (number || '').replace(/[^0-9]/g, '');
+        if (!sanitized) return res.status(400).json({ error: 'number is required' });
+
+        const ok = await saveBotBrand(sanitized, { botName, botImage, channelJid, ownerNumber });
+        if (!ok) return res.status(500).json({ error: 'Failed to save settings' });
+
+        // If this number already has a live session, apply the new branding immediately
+        const liveConn = activeSockets.get(sanitized);
+        if (liveConn) {
+            liveConn.brand = await getBotBrand(sanitized);
+        }
+
+        return res.json({ status: 'ok' });
+    } catch (e) {
+        return res.status(500).json({ error: e.message });
+    }
+});
+
+router.get('/api/brand/:number', async (req, res) => {
+    try {
+        const sanitized = (req.params.number || '').replace(/[^0-9]/g, '');
+        if (!sanitized) return res.status(400).json({ error: 'number is required' });
+        const brand = await getBotBrand(sanitized);
+        return res.json({ brand: brand || null });
+    } catch (e) {
+        return res.status(500).json({ error: e.message });
+    }
+});
+
 router.get('/code', async (req, res) => {
     if (!req.query.number) return res.json({ error: 'Number required' });
     await arslanPair(req.query.number, res);

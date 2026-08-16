@@ -12,6 +12,10 @@ cmd({
     filename: __filename,
 }, async (conn, mek, m, { reply }) => {
     try {
+        const brand = conn.brand || null;
+        const botDisplayName = (brand && brand.botName) || config.BOT_NAME || 'TZ MINI BOT';
+        const channelJid = (brand && brand.channelJid) || "120363406203875411@newsletter";
+
         let totalCommands = 0;
         let grouped = {};
 
@@ -34,7 +38,7 @@ cmd({
         const date = moment().tz("Africa/Kampala").format("dddd, MMMM Do YYYY");
 
         const caption = `
-╭━━━《 *TZ MINI BOT* 》━━━┈⊷
+╭━━━《 *${botDisplayName}* 》━━━┈⊷
 ┃ ✦╭─────────────┈⊷
 ┃ ✦│▸ Total Commands : *${totalCommands}*
 ┃ ✦│▸ Time           : ${time}
@@ -45,9 +49,15 @@ cmd({
 ${menuText}
 `.trim();
 
-        const menuImageSource = (config.IMAGE_PATH && fs.existsSync(config.IMAGE_PATH))
-            ? fs.readFileSync(config.IMAGE_PATH)
-            : { url: config.IMAGE_PATH || "https://files.catbox.moe/prkkzj.png" };
+        const imgTarget = (brand && brand.botImage) || config.IMAGE_PATH;
+        let menuImageSource;
+        if (typeof imgTarget === 'string' && imgTarget.startsWith('data:')) {
+            menuImageSource = Buffer.from(imgTarget.split(',')[1] || '', 'base64');
+        } else if (typeof imgTarget === 'string' && fs.existsSync(imgTarget)) {
+            menuImageSource = fs.readFileSync(imgTarget);
+        } else {
+            menuImageSource = { url: imgTarget || "https://files.catbox.moe/prkkzj.png" };
+        }
 
         await conn.sendMessage(m.chat, {
             image: menuImageSource,
@@ -57,8 +67,8 @@ ${menuText}
                 isForwarded: true,
                 mentionedJid: [m.sender],
                 forwardedNewsletterMessageInfo: {
-                    newsletterJid: "120363406203875411@newsletter",
-                    newsletterName: "TZ MINI BOT",
+                    newsletterJid: channelJid,
+                    newsletterName: botDisplayName,
                     serverMessageId: 2,
                 },
             },

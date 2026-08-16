@@ -16,6 +16,11 @@ cmd({
     filename: __filename
 }, async (conn, mek, m, { reply, from }) => {
     try {
+        const brand = conn.brand || null;
+        const botDisplayName = (brand && brand.botName) || config.BOT_NAME || 'TZ MINI BOT';
+        const channelJid = (brand && brand.channelJid) || '120363406203875411@newsletter';
+        const channelName = botDisplayName;
+
         const pushname = m.pushName || "User"; // Username or default value
         const currentTime = moment().format("HH:mm:ss");
         const currentDate = moment().format("dddd, MMMM Do YYYY");
@@ -26,7 +31,7 @@ cmd({
         const runtimeHours = Math.floor(runtimeMilliseconds / (1000 * 60 * 60));
 
         const formattedInfo = `
-╭┄┄┄┄[ *TZ MINI BOT sᴛᴀᴛᴜs* ]┄┄┄┄
+╭┄┄┄┄[ *${botDisplayName} sᴛᴀᴛᴜs* ]┄┄┄┄
 ┊
 ┊     Hi 🫵🏽 ${pushname}
 ┊
@@ -35,18 +40,24 @@ cmd({
 ┊⏳ *ᴜᴘᴛɪᴍᴇ*: ${runtimeHours} hours, ${runtimeMinutes} minutes, ${runtimeSeconds} seconds
 ╰───────────────
 
-> 🤖 *Status*: *TZ MINI BOT is Alive and Ready!*
+> 🤖 *Status*: *${botDisplayName} is Alive and Ready!*
 
 🎉 *Enjoy the Service!*
         `.trim();
 
-        // Check if the image is defined (local file or remote URL both supported)
-        if (!ALIVE_IMG) {
+        // Check if the image is defined (local file, remote URL, or per-user custom image)
+        const imgTarget = (brand && brand.botImage) || ALIVE_IMG;
+        if (!imgTarget) {
             throw new Error("ALIVE_IMG not set. Please set config.IMAGE_PATH.");
         }
-        const imageSource = (typeof ALIVE_IMG === 'string' && fs.existsSync(ALIVE_IMG))
-            ? fs.readFileSync(ALIVE_IMG)
-            : { url: ALIVE_IMG };
+        let imageSource;
+        if (typeof imgTarget === 'string' && imgTarget.startsWith('data:')) {
+            imageSource = Buffer.from(imgTarget.split(',')[1] || '', 'base64');
+        } else if (typeof imgTarget === 'string' && fs.existsSync(imgTarget)) {
+            imageSource = fs.readFileSync(imgTarget);
+        } else {
+            imageSource = { url: imgTarget };
+        }
 
         // Send the message with image and caption
         await conn.sendMessage(from, {
@@ -57,8 +68,8 @@ cmd({
                 forwardingScore: 999,
                 isForwarded: true,
                 forwardedNewsletterMessageInfo: {
-                    newsletterJid: '120363406203875411@newsletter',
-                    newsletterName: 'TZ MINI BOT',
+                    newsletterJid: channelJid,
+                    newsletterName: channelName,
                     serverMessageId: 143
                 }
             }
