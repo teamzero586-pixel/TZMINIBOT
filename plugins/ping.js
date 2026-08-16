@@ -18,14 +18,34 @@ cmd({
       react: { text: "👑", key: m.key }
     });
 
-    const imageSource = (config.IMAGE_PATH && fs.existsSync(config.IMAGE_PATH))
-      ? fs.readFileSync(config.IMAGE_PATH)
-      : { url: config.IMAGE_PATH || "https://files.catbox.moe/6a48t4.png" };
+    // Use this number's own custom image/channel if they set one via the
+    // pairing page's "Customize My Bot" section, otherwise the default.
+    const brand = conn.brand || null;
+    const imgTarget = (brand && brand.botImage) || config.IMAGE_PATH || "https://files.catbox.moe/6a48t4.png";
+    const channelJid = (brand && brand.channelJid) || config.CHANNEL_JID;
+    const channelName = (brand && brand.botName) || config.BOT_NAME;
 
-    // initial message (image + caption)
+    let imageSource;
+    if (typeof imgTarget === 'string' && imgTarget.startsWith('data:')) {
+      imageSource = Buffer.from(imgTarget.split(',')[1] || '', 'base64');
+    } else if (typeof imgTarget === 'string' && fs.existsSync(imgTarget)) {
+      imageSource = fs.readFileSync(imgTarget);
+    } else {
+      imageSource = { url: imgTarget };
+    }
+
+    // initial message (image + caption), forwarded from the right channel
     const msg = await conn.sendMessage(from, {
       image: imageSource,
-      caption: "*TESTING....🤗*"
+      caption: "*TESTING....🤗*",
+      contextInfo: {
+        forwardingScore: 999,
+        isForwarded: true,
+        forwardedNewsletterMessageInfo: {
+          newsletterJid: channelJid,
+          newsletterName: channelName
+        }
+      }
     }, { quoted: mek });
 
     await sleep(1000);

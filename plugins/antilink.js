@@ -213,14 +213,13 @@ cmd({
         console.log('[AntiLink] Delete error:', e.message);
     }
 
-    // ─── WARN USER ───
+    // ─── WARN USER (without echoing the deleted link) ───
     const warnCount = global.ANTILINK_WARN[from][senderNumber];
     const maxWarns = 3;
-    const linkDisplay = links.slice(0, 2).join(', ') + (links.length > 2 ? ` (+${links.length - 2} more)` : '');
-    
-    const warnMsg = `🔗 *Link detected!*
 
-📌 Links: \`${linkDisplay}\`
+    const warnMsg = `🔗 *Link detected & removed!*
+
+⚠️ Sharing links is not allowed here.
 👤 User: @${senderNumber}
 📊 Warn: ${warnCount}/${maxWarns}
 

@@ -1,81 +1,78 @@
-const axios = require('axios')
-const yts = require('yt-search')
-const { cmd } = require('../arslan')
-const { fakevCard } = require('../lib/fakevCard')
+const yts = require('yt-search');
+const ytdl = require('ytdl-core');
+const { cmd } = require('../arslan');
+const { fakevCard } = require('../lib/fakevCard');
+
+function streamToBuffer(stream) {
+    return new Promise((resolve, reject) => {
+        const chunks = [];
+        stream.on('data', (chunk) => chunks.push(chunk));
+        stream.on('end', () => resolve(Buffer.concat(chunks)));
+        stream.on('error', reject);
+    });
+}
 
 cmd({
-pattern: "video",
-alias: ["vid","playvideo"],
-desc: "Download YouTube Video (Fast)",
-category: "download",
-react: "🎬",
-filename: __filename
+    pattern: "video",
+    alias: ["vid", "playvideo"],
+    desc: "Download YouTube Video",
+    category: "download",
+    react: "🎬",
+    filename: __filename
 },
 async (conn, mek, m, { from, reply, text }) => {
+    try {
+        if (!text) {
+            return reply("❌ Example:\n.video pasoori");
+        }
 
-try {
+        let videoUrl = text;
+        let videoInfo;
 
-if (!text) {
-return reply("❌ Example:\n.video pasoori")
-}
+        if (ytdl.validateURL(text)) {
+            videoInfo = await ytdl.getBasicInfo(text);
+        } else {
+            const search = await yts(text);
+            if (!search.videos.length) {
+                return reply("❌ No video found");
+            }
+            videoUrl = search.videos[0].url;
+            videoInfo = await ytdl.getBasicInfo(videoUrl);
+        }
 
-/* 🔍 Search */
-const search = await yts(text)
+        const details = videoInfo.videoDetails;
+        const durationSec = parseInt(details.lengthSeconds || "0", 10);
 
-if (!search.videos.length) {
-return reply("❌ No video found")
-}
+        if (durationSec > 600) { // 10 minutes safety cap — keeps file size sane
+            return reply("❌ Video is too long (max 10 minutes). Try a shorter one.");
+        }
 
-const vid = search.videos[0]
-
-/* 🎨 Preview */
-
-const caption = `
+        const caption = `
 ╔ஜ۩▒█ TZ MINI BOT █▒۩ஜ╗
 ┃🎬 VIDEO FOUND
-┃📌 Title: ${vid.title}
-┃⏱️ Duration: ${vid.timestamp}
+┃📌 Title: ${details.title}
+┃⏱️ Duration: ${Math.floor(durationSec / 60)}:${String(durationSec % 60).padStart(2, '0')}
 ┃⚡ Sending video...
 ╰━━━━━━━━━━━━━━⊷
-`
+`;
 
-await conn.sendMessage(from,{
-image:{url:vid.thumbnail},
-caption
-},{quoted:fakevCard})
+        await conn.sendMessage(from, {
+            image: { url: details.thumbnails?.[0]?.url },
+            caption
+        }, { quoted: fakevCard });
 
-/* 🎥 API */
+        // format 18 = progressive 360p mp4 (video+audio together, small & reliable)
+        const videoStream = ytdl.downloadFromInfo(videoInfo, { quality: '18' });
+        const buffer = await streamToBuffer(videoStream);
 
-const api = `https://arslan-apis-v2.vercel.app/download/ytmp4?url=${encodeURIComponent(vid.url)}`
+        await conn.sendMessage(from, {
+            video: buffer,
+            mimetype: "video/mp4",
+            caption: `🎬 *${details.title}*\n\n> © TZ MINI BOT`
+        }, { quoted: fakevCard });
 
-const res = await axios.get(api,{timeout:60000})
-
-if(
-!res.data ||
-!res.data.status ||
-!res.data.result ||
-!res.data.result.download ||
-!res.data.result.download.url
-){
-return reply("❌ Video API failed")
-}
-
-const videoUrl = res.data.result.download.url
-const title = res.data.result.metadata.title || vid.title
-
-/* 🚀 SEND VIDEO DIRECT */
-
-await conn.sendMessage(from,{
-video:{url:videoUrl},
-mimetype:"video/mp4",
-caption:`🎬 *${title}*\n\n> © TZ MINI BOT`
-},{quoted:fakevCard})
-
-}catch(err){
-
-console.log(err)
-reply("❌ Video error")
-
-}
-
-})
+    } catch (err) {
+        console.error("VIDEO ERROR:", err.message);
+        reply("❌ Could not download this video — it may be restricted, age-gated, or unavailable. Try a different one.");
+    }
+});

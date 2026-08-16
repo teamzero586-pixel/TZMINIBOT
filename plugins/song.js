@@ -1,143 +1,79 @@
 const { cmd } = require("../arslan");
-const fetch = require("node-fetch");
 const yts = require("yt-search");
-const axios = require("axios");
+const ytdl = require("ytdl-core");
 const { fakevCard } = require('../lib/fakevCard');
 
+function streamToBuffer(stream) {
+    return new Promise((resolve, reject) => {
+        const chunks = [];
+        stream.on('data', (chunk) => chunks.push(chunk));
+        stream.on('end', () => resolve(Buffer.concat(chunks)));
+        stream.on('error', reject);
+    });
+}
+
 cmd({
-pattern: "song",
-alias: ["ytmp3", "play", "mp3", "gana", "music", "audio"],
-react: "🎵",
-desc: "YouTube search & MP3 play",
-category: "download",
-use: ".play ",
-filename: __filename
+    pattern: "song",
+    alias: ["ytmp3", "play", "mp3", "gana", "music", "audio"],
+    react: "🎵",
+    desc: "YouTube search & MP3 play",
+    category: "download",
+    use: ".play <song name>",
+    filename: __filename
 },
 async (conn, mek, m, { from, args, reply }) => {
+    try {
+        const query = args.join(" ");
+        if (!query) return reply("❌ Please provide a song name or YouTube link\n\nExample: .play Pasoori");
 
-try {
+        await conn.sendMessage(from, { react: { text: "⏳", key: m.key } });
 
-const query = args.join(" ");
-if (!query) return reply("❌ Please Provide Me A song Query or Link");
+        let videoUrl = query;
+        let videoInfo;
 
-await conn.sendMessage(from, { react: { text: "⏳", key: m.key } });
+        if (ytdl.validateURL(query)) {
+            videoInfo = await ytdl.getBasicInfo(query);
+        } else {
+            const search = await yts(query);
+            if (!search.videos || !search.videos.length) {
+                return reply("❌ No results found");
+            }
+            videoUrl = search.videos[0].url;
+            videoInfo = await ytdl.getBasicInfo(videoUrl);
+        }
 
-/* 🔍 YouTube Search */
-const search = await yts(query);
+        const details = videoInfo.videoDetails;
+        const durationSec = parseInt(details.lengthSeconds || "0", 10);
 
-if (!search.videos || !search.videos.length) {
-return reply("❌ No result Found");
-}
+        if (durationSec > 900) { // 15 minutes safety cap
+            return reply("❌ Song is too long (max 15 minutes). Try a shorter one.");
+        }
 
-const video = search.videos[0];
+        const audioStream = ytdl.downloadFromInfo(videoInfo, { filter: "audioonly", quality: "highestaudio" });
+        const buffer = await streamToBuffer(audioStream);
 
-/* 🎧 MP3 API */
-const apiUrl = `https://arslan-apis-v2.vercel.app/download/ytmp4?url=${video.url}`;
+        await conn.sendMessage(from, {
+            audio: buffer,
+            mimetype: "audio/mpeg",
+            ptt: false,
+            fileName: `${details.title || "song"}.mp3`,
+            contextInfo: {
+                externalAdReply: {
+                    title: (details.title || "YouTube Song").substring(0, 40),
+                    body: "▶︎ •၊၊||၊|။||||။‌‌‌‌‌၊|• ★彡TZ MINI BOT-ʙᴇᴀᴛꜱ彡★",
+                    thumbnailUrl: details.thumbnails?.[0]?.url,
+                    sourceUrl: videoUrl,
+                    mediaType: 1,
+                    renderLargerThumbnail: true
+                }
+            }
+        }, { quoted: fakevCard });
 
-const res = await axios.get(apiUrl, { timeout: 60000 });
+        await conn.sendMessage(from, { react: { text: "✅", key: m.key } });
 
-if (
- !res.data ||
- !res.data.status ||
- !res.data.result ||
- !res.data.result.download ||
- !res.data.result.download.url
-) {
- return reply("❌ Audio Not Generated");
-}
-
-const dlUrl = res.data.result.download.url;
-const meta = res.data.result.metadata;
-const quality = res.data.result.download.quality || "128kbps";
-
-/* 🎵 SEND AUDIO */
-await conn.sendMessage(from, {
-audio: { url: dlUrl },
-mimetype: "audio/mpeg",
-ptt: false,
-fileName: `${meta.title || "song"}.mp3`,
-caption:
-`🎵 *${meta.title || "Unknown Title"}*\n` +
-`🎚️ Quality: ${quality}\n\n` +
-`> © TZ MINI BOT`,
-contextInfo: {
-externalAdReply: {
-title: meta.title
-? meta.title.substring(0, 40)
-: "YouTube Song",
-body: "▶︎ •၊၊||၊|။||||။‌‌‌‌‌၊|• ★彡TZ MINI BOT-ʙᴇᴀᴛꜱ彡★",
-thumbnailUrl: video.thumbnail,
-sourceUrl: video.url,
-mediaType: 1,
-renderLargerThumbnail: true
-}
-}
-}, { quoted: fakevCard });
-
-await conn.sendMessage(from, { react: { text: "✅", key: m.key } });
-
-} catch (err) {
-
-console.error("PLAY ERROR:", err);
-
-reply("❌ Error Found Please Try Later");
-
-await conn.sendMessage(from, { react: { text: "❌", key: m.key } });
-
-}
-
-});
-
-
-cmd({
-  'pattern': 'video1',
-  'alias': ["vid", "ytv"],
-  'desc': "Download YouTube Video",
-  'category': 'downloader',
-  'react': '🪄',
-  'filename': __filename
-}, async (_0x291138, _0x40711d, _0x320efe, {
-  from: _0x3764b7,
-  q: _0x247990,
-  reply: _0x5286ec
-}) => {
-  try {
-    if (!_0x247990) {
-      return _0x5286ec("Please provide a YouTube link or search query.\n\nExample: .video Pasoori");
+    } catch (err) {
+        console.error("SONG ERROR:", err.message);
+        reply("❌ Could not download this song — it may be restricted, age-gated, or unavailable. Try a different one.");
+        await conn.sendMessage(from, { react: { text: "❌", key: m.key } });
     }
-    let _0x3460a4;
-    if (_0x247990.includes("youtube.com") || _0x247990.includes('youtu.be')) {
-      _0x3460a4 = _0x247990;
-    } else {
-      let _0x145978 = await yts(_0x247990);
-      if (!_0x145978 || !_0x145978.videos || _0x145978.videos.length === 0x0) {
-        return _0x5286ec("No results found.");
-      }
-      _0x3460a4 = _0x145978.videos[0x0].url;
-    }
-    let _0x32732f = await fetch("https://gtech-api-xtp1.onrender.com/api/video/yt?apikey=APIKEY&url=" + encodeURIComponent(_0x3460a4));
-    let _0x207ba6 = await _0x32732f.json();
-    if (!_0x207ba6.status) {
-      return _0x5286ec("Failed to fetch video.");
-    }
-    let {
-      video_url_hd: _0x2500e4,
-      video_url_sd: _0x1f2e71
-    } = _0x207ba6.result.media;
-    let _0x5f2691 = _0x2500e4 !== "No HD video URL available" ? _0x2500e4 : _0x1f2e71;
-    if (!_0x5f2691 || _0x5f2691.includes('No')) {
-      return _0x5286ec("No downloadable video found.");
-    }
-    await _0x291138.sendMessage(_0x3764b7, {
-      'video': {
-        'url': _0x5f2691
-      },
-      'caption': "*❀༒★[TZ MINI BOT]★༒❀*"
-    }, {
-      'quoted': fakevCard
-    });
-  } catch (_0x4a5abf) {
-    _0x5286ec("Error while fetching video.");
-    console.log(_0x4a5abf);
-  }
 });

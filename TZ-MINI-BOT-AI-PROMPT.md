@@ -1,4 +1,4 @@
-# TZ MINI BOT — AI Command-Writing Prompt
+# TZ MINI BOT — AI Command-Writing Prompt (v2)
 
 Copy everything below this line and send it to any AI (ChatGPT, Claude, Gemini, etc.)
 along with what command you want. The AI will write a command file that works
@@ -60,7 +60,7 @@ module.exports = {
 | `extra.isAdmin` | boolean | True if sender is a group admin |
 | `extra.isBotAdmin` | boolean | True if the bot itself is a group admin |
 | `extra.config` | object | Bot config (`prefix`, `botName`, `ownerName`, `ownerNumber`, `newsletterJid`, `social.*`) |
-| `extra.reply(text)` | function | Send a text reply — **the bot's branding image is attached automatically**, don't add your own image for plain replies |
+| `extra.reply(text)` | function | Send a text reply — the correct branding image + channel-forward tag is attached **automatically** (per-number custom branding if the connected number set one, otherwise the default). Never attach your own image for a plain text reply. |
 | `extra.react(emoji)` | function | React to the triggering message with an emoji |
 
 ### Other function arguments
@@ -71,29 +71,61 @@ module.exports = {
 - `args` — array of words typed after the command.
 
 ### Sending your own media (example)
+Prefer sending a **Buffer** over a raw `{ url }` — it's more reliable, since
+some hosts block hotlinking or expire links quickly:
 ```js
+const axios = require('axios');
+const resp = await axios.get(fileUrl, { responseType: 'arraybuffer', timeout: 30000 });
 await sock.sendMessage(extra.from, {
-    video: { url: downloadedVideoUrl },
+    video: Buffer.from(resp.data),
+    mimetype: 'video/mp4',
     caption: "Here you go!"
 }, { quoted: msg });
 ```
+
+### YouTube / media downloads
+Use the **`ytdl-core`** package (already installed) instead of unverified
+third-party download APIs — those tend to go down or rate-limit without
+warning:
+```js
+const ytdl = require('ytdl-core');
+const yts = require('yt-search');
+
+function streamToBuffer(stream) {
+    return new Promise((resolve, reject) => {
+        const chunks = [];
+        stream.on('data', c => chunks.push(c));
+        stream.on('end', () => resolve(Buffer.concat(chunks)));
+        stream.on('error', reject);
+    });
+}
+// search with yts(query) if the input isn't already a YouTube URL,
+// then ytdl.getBasicInfo(url) + ytdl.downloadFromInfo(info, { filter, quality })
+```
+Always cap duration (e.g. reject anything over 10–15 minutes) to avoid huge
+in-memory buffers on a small server.
 
 ### Rules the AI must follow
 1. Always wrap the command logic in `try/catch` and reply with a friendly
    error message on failure — never let it crash silently.
 2. Never hardcode the bot owner's name/number/prefix — read from `extra.config`.
 3. Keep `name` short, lowercase, no spaces, and **different from any command
-   that might already exist** (don't reuse a common name like `menu`, `ping`,
-   `alive`, `owner`, `pair`, `kick`, `promote`, `demote`, `warn`, `tagall`,
-   `hidetag`, `welcome`, `mode`, `setprefix`, `unblock`, `antilink`,
-   `antidelete`, `anticall`, `apk`, `attp`, `song`, `add`, `online` — those
-   already exist natively).
+   that might already exist**. Do not reuse any of these existing names:
+   `menu`, `ping`, `alive`, `owner`, `pair`, `pair2`, `kick`, `kickall`,
+   `promote`, `demote`, `tagall`, `hidetag`, `welcome`, `goodbye`, `mode`,
+   `setprefix`, `unblock`, `antilink`, `antidelete`, `antidelstatus`,
+   `anticall`, `anti-call`, `antibad`, `apk`, `attp`, `song`, `video`, `add`,
+   `online`, `autobio`, `autoread`, `autotyping`, `autorecording`,
+   `autolikestatus`, `autoviewsview`, `fb`, `igdl`, `igdl2`, `igdl4`, `ig3`,
+   `yts`, `vv`, `screenshot`, `leave`, `end`, `botadmin`, `admincheck`,
+   `groupstatus`, `removeadmins`, `acceptall`, `rejectall`, `requestlist`.
 4. Pick the most fitting existing category folder.
 5. If the command needs a paid/external API key that isn't something a free
    public API already covers, say so clearly instead of pretending it will work.
 6. Return ONLY the finished `.js` file content, ready to paste directly, with
    no explanation mixed into the code.
-7. Never write anything sexual/adult, or content aimed at minors.
+7. Never write anything sexual/adult, or content aimed at or sexualizing minors,
+   under any framing.
 
 ### My request
 Now write a command that does the following:
@@ -113,17 +145,25 @@ Now write a command that does the following:
 4. Restart the bot (or redeploy) — it loads automatically on boot via
    `plugins/zzz-ported-commands-loader.js`. Nothing else needs to change.
 
-### Branding image
-Every command reply (`extra.reply()` for ported commands, `ctx.reply()` for
-native ones) now automatically goes out with the TZ MINI BOT image attached —
-this is handled centrally in `main.js` and `config.js` (`IMAGE_PATH`). You
-don't need to attach it yourself unless the command sends its own custom
-media (video/sticker/etc.), in which case just leave it as-is.
+### Branding image & channel forward
+Every command reply now automatically goes out with the correct branding
+image attached AND a "forwarded from channel" tag — using that number's own
+custom name/image/channel if they set one via the pairing page's "Customize
+My Bot" section, otherwise the default TZ MINI BOT branding/channel. This is
+handled centrally in `main.js` (`brandedReply`) — you never need to attach it
+yourself in a new command unless you're sending custom media directly via `sock`.
+
+### Admin panel
+`/admin` (passcode-protected) lets the deployer see all connected numbers,
+add/remove channels from the react/follow list, and bulk-join all connected
+numbers into a WhatsApp group. This isn't something a new command needs to
+touch.
 
 ### Advanced: the native `cmd()` format
 A smaller set of core commands (`.menu`, `.ping`, `.alive`, `.pair`, group
 admin tools, etc.) live directly in `plugins/*.js` using a different, lower-level
-contract built on `require("../arslan")`'s `cmd()` function. You generally
-don't need this for new commands — the ported format above is simpler and is
-now the default for anything new. Only ask for the native format if you're
-modifying one of those existing core files.
+contract built on `require("../arslan")`'s `cmd()` function, with a callback
+shaped `(conn, mek, m, ctx) => {}`. You generally don't need this for new
+commands — the ported format above is simpler and is the default for
+anything new. Only ask for the native format if you're modifying one of
+those existing core files.

@@ -62,17 +62,17 @@ ${menuText}
         const menuPayload = {
             image: menuImageSource,
             caption,
-            contextInfo: { mentionedJid: [m.sender] }
+            contextInfo: {
+                mentionedJid: [m.sender],
+                forwardingScore: 999,
+                isForwarded: true,
+                forwardedNewsletterMessageInfo: {
+                    newsletterJid: channelJid,
+                    newsletterName: botDisplayName,
+                    serverMessageId: 2,
+                }
+            }
         };
-        if (brand && brand.channelJid) {
-            menuPayload.contextInfo.forwardingScore = 999;
-            menuPayload.contextInfo.isForwarded = true;
-            menuPayload.contextInfo.forwardedNewsletterMessageInfo = {
-                newsletterJid: channelJid,
-                newsletterName: botDisplayName,
-                serverMessageId: 2,
-            };
-        }
         await conn.sendMessage(m.chat, menuPayload, { quoted: fakevCard });
 
     } catch (err) {

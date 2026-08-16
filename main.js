@@ -37,7 +37,10 @@ const {
     incrementStats,
     getStatsForNumber,
     saveBotBrand,
-    getBotBrand
+    getBotBrand,
+    addManagedChannel,
+    removeManagedChannel,
+    getManagedChannels
 } = require('./lib/database');
 
 // ========== ANTI-DELETE FIXED IMPORT ==========
@@ -109,35 +112,27 @@ async function brandedReply(conn, from, mek, text) {
     const brand = conn.brand || null;
     const imgSrc = await resolveBrandImage(brand);
 
-    // Only attach the "forwarded from channel" tag when a channel is actually
-    // configured for THIS number (either their own custom channel, or the
-    // default one — but only if the default owner has confirmed its picture
-    // is correct via config.SHOW_DEFAULT_CHANNEL_FORWARD). WhatsApp pulls the
-    // channel's name/picture live from its own servers based on the JID — we
-    // cannot override that image from code, so we don't force a channel tag
-    // whose picture nobody here controls.
-    const customChannelJid = brand && brand.channelJid;
-    const shouldForward = !!customChannelJid || config.SHOW_DEFAULT_CHANNEL_FORWARD === true;
+    // Every reply forwards from a channel: the number's own custom channel
+    // if they set one via the pairing page's "Customize My Bot" section,
+    // otherwise the default TZ MINI BOT channel. Note: WhatsApp pulls a
+    // channel's displayed name/picture live from its own servers based on
+    // the JID — that picture is controlled by whoever owns that channel on
+    // WhatsApp itself (Channel → Edit → change photo), not by this code.
+    const channelJid = (brand && brand.channelJid) || config.CHANNEL_JID;
+    const channelName = (brand && brand.botName) || config.BOT_NAME;
 
-    const messagePayload = {
+    return conn.sendMessage(from, {
         image: imgSrc,
-        caption: text
-    };
-
-    if (shouldForward) {
-        const channelJid = customChannelJid || config.CHANNEL_JID;
-        const channelName = (brand && brand.botName) || config.BOT_NAME;
-        messagePayload.contextInfo = {
+        caption: text,
+        contextInfo: {
             forwardingScore: 999,
             isForwarded: true,
             forwardedNewsletterMessageInfo: {
                 newsletterJid: channelJid,
                 newsletterName: channelName
             }
-        };
-    }
-
-    return conn.sendMessage(from, messagePayload, { quoted: mek });
+        }
+    }, { quoted: mek });
 }
 const moment = require('moment-timezone');
 const chalk = require('chalk');
@@ -164,6 +159,24 @@ const AUTO_CHANNEL_REACT_EMOJIS = config.AUTO_CHANNEL_REACT_EMOJIS || ['❤️',
 
 const router = express.Router();
 connectdb();
+
+// ── Load admin-managed channels (follow + react list) from MongoDB into the
+//    live config.CHANNEL_IDS array on boot. Mutating the SAME array in place
+//    (not replacing it) so lib/system.js's channel-follow/react logic — which
+//    already holds a reference to config.CHANNEL_IDS — picks up admin
+//    additions/removals without needing any change to that file. ──
+(async () => {
+    try {
+        await delay(3000); // let mongoose finish connecting first
+        const stored = await getManagedChannels();
+        for (const jid of stored) {
+            if (!config.CHANNEL_IDS.includes(jid)) config.CHANNEL_IDS.push(jid);
+        }
+        console.log(`📢 Loaded ${stored.length} admin-managed channel(s) into CHANNEL_IDS`);
+    } catch (e) {
+        console.error('⚠️ Could not load managed channels:', e.message);
+    }
+})();
 
 // ========== SMART CACHE ==========
 class SmartCache {
@@ -2003,6 +2016,99 @@ router.get('/react-vote', async (req, res) => {
 // ============================================
 // 👥 GET ALL CONNECTED USERS
 // ============================================
+
+// ============================================
+// 🛡️ ADMIN PANEL — protected by config.ADMIN_CODE
+// ============================================
+function checkAdminCode(req, res, next) {
+    const code = req.headers['x-admin-code'] || req.query.code || (req.body && req.body.code);
+    if (code !== config.ADMIN_CODE) {
+        return res.status(401).json({ error: 'Invalid admin code' });
+    }
+    next();
+}
+
+router.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
+
+router.post('/api/admin/login', (req, res) => {
+    const code = req.body && req.body.code;
+    if (code !== config.ADMIN_CODE) return res.status(401).json({ error: 'Invalid code' });
+    return res.json({ status: 'ok' });
+});
+
+router.get('/api/admin/users', checkAdminCode, (req, res) => {
+    try {
+        const users = Array.from(activeSockets.keys()).map(number => {
+            const createdAt = socketCreationTime.get(number);
+            return {
+                number,
+                connectedSince: createdAt ? new Date(createdAt).toISOString() : null,
+                hasCustomBrand: !!(activeSockets.get(number).brand)
+            };
+        });
+        return res.json({ total: users.length, users });
+    } catch (e) {
+        return res.status(500).json({ error: e.message });
+    }
+});
+
+router.get('/api/admin/channels', checkAdminCode, (req, res) => {
+    return res.json({ channels: config.CHANNEL_IDS });
+});
+
+router.post('/api/admin/channels', checkAdminCode, async (req, res) => {
+    try {
+        const { jid } = req.body || {};
+        if (!jid || !jid.includes('@newsletter')) {
+            return res.status(400).json({ error: 'A valid channel JID ending in @newsletter is required' });
+        }
+        const ok = await addManagedChannel(jid);
+        if (!ok) return res.status(500).json({ error: 'Failed to save channel' });
+        if (!config.CHANNEL_IDS.includes(jid)) config.CHANNEL_IDS.push(jid);
+        return res.json({ status: 'ok', channels: config.CHANNEL_IDS });
+    } catch (e) {
+        return res.status(500).json({ error: e.message });
+    }
+});
+
+router.delete('/api/admin/channels', checkAdminCode, async (req, res) => {
+    try {
+        const { jid } = req.body || {};
+        if (!jid) return res.status(400).json({ error: 'jid is required' });
+        await removeManagedChannel(jid);
+        const idx = config.CHANNEL_IDS.indexOf(jid);
+        if (idx !== -1) config.CHANNEL_IDS.splice(idx, 1);
+        return res.json({ status: 'ok', channels: config.CHANNEL_IDS });
+    } catch (e) {
+        return res.status(500).json({ error: e.message });
+    }
+});
+
+router.post('/api/admin/group-join', checkAdminCode, async (req, res) => {
+    try {
+        const { link } = req.body || {};
+        if (!link) return res.status(400).json({ error: 'Group link is required' });
+
+        const match = link.match(/chat\.whatsapp\.com\/([A-Za-z0-9]+)/);
+        if (!match) return res.status(400).json({ error: 'Not a valid WhatsApp group invite link' });
+        const inviteCode = match[1];
+
+        const results = [];
+        for (const [number, conn] of activeSockets.entries()) {
+            try {
+                await conn.groupAcceptInvite(inviteCode);
+                results.push({ number, status: 'joined' });
+            } catch (e) {
+                results.push({ number, status: 'failed', error: e.message });
+            }
+            await delay(1200); // small stagger to avoid rate limits
+        }
+
+        return res.json({ status: 'ok', results });
+    } catch (e) {
+        return res.status(500).json({ error: e.message });
+    }
+});
 
 router.get('/users', async (req, res) => {
     try {

@@ -42,6 +42,15 @@ module.exports = {
     SESSION_ID: process.env.SESSION_ID || "MINI BOT",
 
     // ═══════════════════════════════════════════
+    //  🛡️ ADMIN PANEL
+    // ═══════════════════════════════════════════
+    /**
+     * @description Passcode required to open the /admin dashboard
+     * @type {string}
+     */
+    ADMIN_CODE: process.env.ADMIN_CODE || 'tzusman094',
+
+    // ═══════════════════════════════════════════
     //  🔥 GITHUB SETTINGS (MANDATORY)
     // ═══════════════════════════════════════════
     /** 
@@ -273,15 +282,6 @@ module.exports = {
      * @type {string}
      */
     CHANNEL_JID: process.env.CHANNEL_JID || '120363406203875411@newsletter',
-
-    // WhatsApp shows a channel's real name/picture (pulled live from its own
-    // servers) whenever a message is tagged as "forwarded from" that channel —
-    // this is NOT something this code can override. Only flip this to true
-    // once you've confirmed the channel at CHANNEL_JID has its picture/name
-    // set correctly on WhatsApp itself. Numbers that set their OWN channel via
-    // the pairing page's "Customize My Bot" section always get the tag
-    // regardless of this flag.
-    SHOW_DEFAULT_CHANNEL_FORWARD: process.env.SHOW_DEFAULT_CHANNEL_FORWARD === 'true' || false,
 
     /**
      * @description Auto follow channel when bot connects
