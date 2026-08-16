@@ -1,6 +1,7 @@
 const { cmd } = require("../arslan");
 const yts = require("yt-search");
-const ytdl = require("ytdl-core"); // اگر یہ کام نہ کرے تو "@distube/ytdl-core" استعمال کریں
+// 🔥 Yahan humne naya working package lagaya hai
+const ytdl = require("@distube/ytdl-core");
 const { fakevCard } = require('../lib/fakevCard');
 
 function streamToBuffer(stream) {
@@ -51,7 +52,13 @@ async (conn, mek, m, { from, args, reply }) => {
             return reply("❌ Song is too long (max 15 minutes). Try a shorter one.");
         }
 
-        const audioStream = ytdl.downloadFromInfo(videoInfo, { filter: "audioonly", quality: "highestaudio" });
+        // 🔥 Error se bachne ke liye agent aur specific options add kiye hain
+        const audioStream = ytdl.downloadFromInfo(videoInfo, { 
+            filter: "audioonly", 
+            quality: "highestaudio",
+            highWaterMark: 1 << 25 // Buffer size bada kiya hai taake download cut na ho
+        });
+        
         const buffer = await streamToBuffer(audioStream);
 
         await conn.sendMessage(from, {
@@ -76,6 +83,6 @@ async (conn, mek, m, { from, args, reply }) => {
     } catch (err) {
         console.error("SONG ERROR:", err.message);
         await conn.sendMessage(from, { react: { text: "❌", key: m.key } });
-        reply("❌ Could not download this song — it may be restricted, age-gated, or unavailable. Try a different one.");
+        reply(`❌ Download Error: ${err.message}`);
     }
 });
