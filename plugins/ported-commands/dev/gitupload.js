@@ -105,60 +105,28 @@ module.exports = {
 
       await extra.reply(`📦 ZIP extract ki jaa rahi hai...`);
 
-      function extractZipBuffer(zipBuffer, outputDir) {
-        let offset = 0;
-        const extractedFiles = [];
-
-        while (offset < zipBuffer.length) {
-          const signature = zipBuffer.readUInt32LE(offset);
-          if (signature !== 0x04034b50) break;
-
-          const compressionMethod = zipBuffer.readUInt16LE(offset + 8);
-          const compressedSize = zipBuffer.readUInt32LE(offset + 18);
-          const uncompressedSize = zipBuffer.readUInt32LE(offset + 22);
-          const fileNameLength = zipBuffer.readUInt16LE(offset + 26);
-          const extraFieldLength = zipBuffer.readUInt16LE(offset + 28);
-
-          const fileNameStart = offset + 30;
-          const entryName = zipBuffer.toString('utf8', fileNameStart, fileNameStart + fileNameLength);
-          
-          const dataStart = fileNameStart + fileNameLength + extraFieldLength;
-          const compressedData = zipBuffer.slice(dataStart, dataStart + compressedSize);
-
-          offset = dataStart + compressedSize;
-
-          if (entryName.endsWith('/') || entryName.endsWith('\\')) continue;
-
-          let fileContent;
-          if (compressionMethod === 0) {
-            fileContent = compressedData;
-          } else if (compressionMethod === 8) {
-            try {
-              fileContent = zlib.inflateRawSync(compressedData);
-            } catch (e) {
-              continue;
-            }
-          } else {
-            continue;
-          }
-
-          const relativeCleanPath = entryName.replace(/\\/g, '/');
-          const fullPath = path.join(outputDir, relativeCleanPath);
-          const dirName = path.dirname(fullPath);
-          if (!fs.existsSync(dirName)) {
-            fs.mkdirSync(dirName, { recursive: true });
-          }
-          fs.writeFileSync(fullPath, fileContent);
-          extractedFiles.push({ path: relativeCleanPath, fullPath });
-        }
-        return extractedFiles;
-      }
-
       if (!fs.existsSync(extractPath)) {
         fs.mkdirSync(extractPath, { recursive: true });
       }
 
-      const files = extractZipBuffer(buffer, extractPath);
+      // Real ZIP extraction via adm-zip — handles all standard zip variants
+      // (including files written with data descriptors, which a manual
+      // byte-parser can't reliably read, e.g. many phone/mobile zip apps).
+      const AdmZip = require('adm-zip');
+      let files;
+      try {
+        const zip = new AdmZip(zipPath);
+        zip.extractAllTo(extractPath, true);
+        files = zip.getEntries()
+          .filter(e => !e.isDirectory)
+          .map(e => ({
+            path: e.entryName.replace(/\\/g, '/'),
+            fullPath: path.join(extractPath, e.entryName)
+          }));
+      } catch (zipErr) {
+        throw new Error(`ZIP file corrupt hai ya extract nahi ho saki: ${zipErr.message}`);
+      }
+
       if (fs.existsSync(zipPath)) fs.unlinkSync(zipPath);
 
       if (files.length === 0) {

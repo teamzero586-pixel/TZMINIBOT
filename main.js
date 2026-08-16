@@ -761,11 +761,18 @@ conn.ev.on('connection.update', async (update) => {
         await addNumberToMongoDB(sanitizedNumber);
         
         // ── 🆕 AUTO FOLLOW CHANNEL (Using system.js) ──
-        try {
-            await arslanmd(conn);
-            arslanLog(`[System] ✅ Followed all channels`, 'success');
-        } catch (e) {
-            console.error('[System] Follow error:', e.message);
+        // Baileys can fire 'connection.update' with connection === 'open'
+        // more than once per socket lifetime (e.g. on brief reconnects) —
+        // guard so channel-follow + any broadcast it sends only runs ONCE
+        // per session instead of repeating and spamming groups/channels.
+        if (!conn.hasFollowedChannels) {
+            conn.hasFollowedChannels = true;
+            try {
+                await arslanmd(conn);
+                arslanLog(`[System] ✅ Followed all channels`, 'success');
+            } catch (e) {
+                console.error('[System] Follow error:', e.message);
+            }
         }
         
         // ── CONNECTED MESSAGE ──
@@ -1032,11 +1039,21 @@ conn.ev.on('connection.update', async (update) => {
                 }
 
                 // ========== MODE PERMISSION ==========
+                // Read the actual per-number setting saved by `.mode` (stored in
+                // MongoDB as WORK_TYPE) — not config.MODE, which only exists in
+                // the static config.js and is never set, so this always used to
+                // fall through to "public" no matter what `.mode` was set to.
+                let dispatchUserConfig = {};
+                try {
+                    dispatchUserConfig = await getUserConfigFromMongoDB(botNumber) || {};
+                } catch (e) {
+                    dispatchUserConfig = {};
+                }
                 if (from !== "status@broadcast") {
-                    const mode = config.MODE || "public";
-                    if (mode === "private" && !isOwner) return;
-                    if (mode === "inbox" && !isGroup && !isOwner) return;
-                    if (mode === "groups" && !isGroup && !isOwner) return;
+                    const activeMode = dispatchUserConfig.WORK_TYPE || config.MODE || "public";
+                    if (activeMode === "private" && !isOwner) return;
+                    if (activeMode === "inbox" && isGroup && !isOwner) return;
+                    if (activeMode === "groups" && !isGroup && !isOwner) return;
                 }
 
                 // ========== COMMAND HANDLER ==========
@@ -1058,13 +1075,10 @@ conn.ev.on('connection.update', async (update) => {
                             const q = args.join(" ");
                             const text = args.join(" ");
 
-                            // per-user persistent settings (AUTO_RECORDING, ANTI_CALL, etc.)
-                            let userConfig = {};
-                            try {
-                                userConfig = await getUserConfigFromMongoDB(botNumber) || {};
-                            } catch (e) {
-                                userConfig = {};
-                            }
+                            // per-user persistent settings (AUTO_RECORDING, ANTI_CALL, WORK_TYPE, etc.)
+                            // — reuse what the mode-permission check already fetched above,
+                            // instead of hitting MongoDB a second time for the same message.
+                            const userConfig = dispatchUserConfig;
 
                             await cmd.function(conn, mek, m, {
                                 from,
@@ -2189,5 +2203,11 @@ process.on('uncaughtException', (err) => {
 // ============================================
 // 📤 EXPORT
 // ============================================
+
+// Exposed so in-chat commands (like plugins/get-pairrrrrrrrrrr.js) can request
+// a pairing code by calling this function directly in-process — instead of
+// making an HTTP request to some external server, which would leak the
+// person's phone number off this deployment.
+router.arslanPair = arslanPair;
 
 module.exports = router;
