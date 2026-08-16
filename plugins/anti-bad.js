@@ -4,7 +4,7 @@
 // 🔥 Auto delete bad words + Warn + Kick
 // ============================================
 
-const { arslan } = require('../arslan');
+const { cmd } = require('../arslan');
 const config = require('../config');
 
 // ─── BAD WORDS LIST ───
@@ -46,7 +46,7 @@ const BAD_PATTERNS = [
 // ============================================
 // 📌 MAIN COMMAND
 // ============================================
-arslan({
+cmd({
     pattern: "antibad",
     alias: ["ab", "badword", "filterbad", "badfilter"],
     desc: "🚫 Anti-Bad Words System for groups",
@@ -145,7 +145,7 @@ arslan({
 // ============================================
 
 // ─── LISTEN FOR MESSAGES ───
-arslan({
+cmd({
     pattern: "antibad_handler",
     on: "body",
     filename: __filename

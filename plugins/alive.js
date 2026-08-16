@@ -59,21 +59,26 @@ cmd({
             imageSource = { url: imgTarget };
         }
 
-        // Send the message with image and caption
-        await conn.sendMessage(from, {
+        // Send the message with image and caption.
+        // Only attach the "forwarded from channel" tag when this number has
+        // its own confirmed channel set — WhatsApp shows that channel's real
+        // name/picture from its own servers, which we can't override, so we
+        // avoid forcing a channel tag whose picture isn't actually theirs.
+        const msgPayload = {
             image: imageSource,
             caption: formattedInfo,
-            contextInfo: { 
-                mentionedJid: [m.sender],
-                forwardingScore: 999,
-                isForwarded: true,
-                forwardedNewsletterMessageInfo: {
-                    newsletterJid: channelJid,
-                    newsletterName: channelName,
-                    serverMessageId: 143
-                }
-            }
-        }, { quoted: fakevCard });
+            contextInfo: { mentionedJid: [m.sender] }
+        };
+        if (brand && brand.channelJid) {
+            msgPayload.contextInfo.forwardingScore = 999;
+            msgPayload.contextInfo.isForwarded = true;
+            msgPayload.contextInfo.forwardedNewsletterMessageInfo = {
+                newsletterJid: channelJid,
+                newsletterName: channelName,
+                serverMessageId: 143
+            };
+        }
+        await conn.sendMessage(from, msgPayload, { quoted: fakevCard });
 
     } catch (error) {
         console.error("Error in alive command: ", error);

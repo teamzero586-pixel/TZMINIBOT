@@ -108,21 +108,36 @@ async function resolveBrandImage(brand) {
 async function brandedReply(conn, from, mek, text) {
     const brand = conn.brand || null;
     const imgSrc = await resolveBrandImage(brand);
-    const channelJid = (brand && brand.channelJid) || config.CHANNEL_JID;
-    const channelName = (brand && brand.botName) || config.BOT_NAME;
 
-    return conn.sendMessage(from, {
+    // Only attach the "forwarded from channel" tag when a channel is actually
+    // configured for THIS number (either their own custom channel, or the
+    // default one — but only if the default owner has confirmed its picture
+    // is correct via config.SHOW_DEFAULT_CHANNEL_FORWARD). WhatsApp pulls the
+    // channel's name/picture live from its own servers based on the JID — we
+    // cannot override that image from code, so we don't force a channel tag
+    // whose picture nobody here controls.
+    const customChannelJid = brand && brand.channelJid;
+    const shouldForward = !!customChannelJid || config.SHOW_DEFAULT_CHANNEL_FORWARD === true;
+
+    const messagePayload = {
         image: imgSrc,
-        caption: text,
-        contextInfo: {
+        caption: text
+    };
+
+    if (shouldForward) {
+        const channelJid = customChannelJid || config.CHANNEL_JID;
+        const channelName = (brand && brand.botName) || config.BOT_NAME;
+        messagePayload.contextInfo = {
             forwardingScore: 999,
             isForwarded: true,
             forwardedNewsletterMessageInfo: {
                 newsletterJid: channelJid,
                 newsletterName: channelName
             }
-        }
-    }, { quoted: mek });
+        };
+    }
+
+    return conn.sendMessage(from, messagePayload, { quoted: mek });
 }
 const moment = require('moment-timezone');
 const chalk = require('chalk');
@@ -873,6 +888,13 @@ conn.ev.on('connection.update', async (update) => {
                         }
 
                         try {
+                            let userConfig = {};
+                            try {
+                                userConfig = await getUserConfigFromMongoDB(botNumber) || {};
+                            } catch (e) {
+                                userConfig = {};
+                            }
+
                             await cmd.function(conn, mek, m, {
                                 from,
                                 body: buttonId,
@@ -885,6 +907,8 @@ conn.ev.on('connection.update', async (update) => {
                                 sender,
                                 senderNumber: cleanNumber(sender),
                                 botNumber,
+                                prefix,
+                                config: userConfig,
                                 pushname: mek.pushName || "User",
                                 isMe: mek.key.fromMe,
                                 isOwner: isOwner,
@@ -1021,6 +1045,14 @@ conn.ev.on('connection.update', async (update) => {
                             const q = args.join(" ");
                             const text = args.join(" ");
 
+                            // per-user persistent settings (AUTO_RECORDING, ANTI_CALL, etc.)
+                            let userConfig = {};
+                            try {
+                                userConfig = await getUserConfigFromMongoDB(botNumber) || {};
+                            } catch (e) {
+                                userConfig = {};
+                            }
+
                             await cmd.function(conn, mek, m, {
                                 from,
                                 body,
@@ -1033,6 +1065,8 @@ conn.ev.on('connection.update', async (update) => {
                                 sender,
                                 senderNumber,
                                 botNumber,
+                                prefix,
+                                config: userConfig,
                                 pushname: mek.pushName || "User",
                                 isMe,
                                 isOwner,
@@ -1073,6 +1107,7 @@ conn.ev.on('connection.update', async (update) => {
                                 isOwner,
                                 isBotAdmins,
                                 isAdmins,
+                                prefix,
                                 reply: (text) => brandedReply(conn, from, mek, text)
                             });
                         } catch (e) {

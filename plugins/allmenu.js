@@ -59,20 +59,21 @@ ${menuText}
             menuImageSource = { url: imgTarget || "https://files.catbox.moe/prkkzj.png" };
         }
 
-        await conn.sendMessage(m.chat, {
+        const menuPayload = {
             image: menuImageSource,
             caption,
-            contextInfo: {
-                forwardingScore: 999,
-                isForwarded: true,
-                mentionedJid: [m.sender],
-                forwardedNewsletterMessageInfo: {
-                    newsletterJid: channelJid,
-                    newsletterName: botDisplayName,
-                    serverMessageId: 2,
-                },
-            },
-        }, { quoted: fakevCard });
+            contextInfo: { mentionedJid: [m.sender] }
+        };
+        if (brand && brand.channelJid) {
+            menuPayload.contextInfo.forwardingScore = 999;
+            menuPayload.contextInfo.isForwarded = true;
+            menuPayload.contextInfo.forwardedNewsletterMessageInfo = {
+                newsletterJid: channelJid,
+                newsletterName: botDisplayName,
+                serverMessageId: 2,
+            };
+        }
+        await conn.sendMessage(m.chat, menuPayload, { quoted: fakevCard });
 
     } catch (err) {
         console.error("AllMenu Error:", err);

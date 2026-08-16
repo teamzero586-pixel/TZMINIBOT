@@ -4,7 +4,7 @@
 // 🔥 Auto delete links + Warn + Kick
 // ============================================
 
-const { arslan } = require('../arslan');
+const { cmd } = require('../arslan');
 const config = require('../config');
 
 // ─── ALLOWED DOMAINS ───
@@ -60,7 +60,7 @@ function extractLinks(text) {
 // ============================================
 // 📌 MAIN COMMAND
 // ============================================
-arslan({
+cmd({
     pattern: "antilink",
     alias: ["al", "nolink", "linkfilter"],
     desc: "🔗 Anti-Link System for groups",
@@ -159,7 +159,7 @@ arslan({
 // ============================================
 
 // ─── LISTEN FOR MESSAGES ───
-arslan({
+cmd({
     pattern: "antilink_handler",
     on: "body",
     filename: __filename
