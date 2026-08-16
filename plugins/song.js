@@ -1,6 +1,6 @@
 const { cmd } = require("../arslan");
 const yts = require("yt-search");
-const ytdl = require("ytdl-core");
+const ytdl = require("ytdl-core"); // اگر یہ کام نہ کرے تو "@distube/ytdl-core" استعمال کریں
 const { fakevCard } = require('../lib/fakevCard');
 
 function streamToBuffer(stream) {
@@ -36,6 +36,7 @@ async (conn, mek, m, { from, args, reply }) => {
         } else {
             const search = await yts(query);
             if (!search.videos || !search.videos.length) {
+                await conn.sendMessage(from, { react: { text: "❌", key: m.key } });
                 return reply("❌ No results found");
             }
             videoUrl = search.videos[0].url;
@@ -46,6 +47,7 @@ async (conn, mek, m, { from, args, reply }) => {
         const durationSec = parseInt(details.lengthSeconds || "0", 10);
 
         if (durationSec > 900) { // 15 minutes safety cap
+            await conn.sendMessage(from, { react: { text: "❌", key: m.key } });
             return reply("❌ Song is too long (max 15 minutes). Try a shorter one.");
         }
 
@@ -73,7 +75,7 @@ async (conn, mek, m, { from, args, reply }) => {
 
     } catch (err) {
         console.error("SONG ERROR:", err.message);
-        reply("❌ Could not download this song — it may be restricted, age-gated, or unavailable. Try a different one.");
         await conn.sendMessage(from, { react: { text: "❌", key: m.key } });
+        reply("❌ Could not download this song — it may be restricted, age-gated, or unavailable. Try a different one.");
     }
 });
