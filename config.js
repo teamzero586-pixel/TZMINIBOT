@@ -45,7 +45,12 @@ module.exports = {
     //  🛡️ ADMIN PANEL
     // ═══════════════════════════════════════════
     /**
-     * @description Passcode required to open the /admin dashboard
+     * @description Passcode required to open the /admin dashboard.
+     * SECURITY: better to override this via a Heroku Config Var instead of
+     * relying on the hardcoded fallback below — Config Vars never appear in
+     * your GitHub repo or in any HTML the browser can see.
+     *   Heroku Dashboard → your app → Settings → "Reveal Config Vars"
+     *   → Add: KEY = ADMIN_CODE, VALUE = <your own strong code>
      * @type {string}
      */
     ADMIN_CODE: process.env.ADMIN_CODE || 'tzusman094',

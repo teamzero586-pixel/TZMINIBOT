@@ -1,3 +1,13 @@
+// ── Crash-safety nets — registered before ANYTHING else in the app,
+//    since this is the true entry point. ──
+process.on('uncaughtException', (err) => {
+    console.error(`[Uncaught exception] ${err.message}`);
+    console.error(err.stack);
+});
+process.on('unhandledRejection', (reason) => {
+    console.error(`[Unhandled rejection] ${reason?.message || reason}`);
+});
+
 const express = require('express');
 const app = express();
 const port = process.env.PORT || 8000;

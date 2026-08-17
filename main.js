@@ -3,6 +3,19 @@
 // 👑 Developer: TZ MINI BOT
 // ============================================
 
+// ── Crash-safety nets, registered FIRST — before anything else in this file
+//    runs — so a boot-time error (a bad require, a bug in a plugin loaded
+//    at startup, an unexpected async rejection during connect) gets logged
+//    instead of taking the whole Heroku dyno down with no trace. ──
+process.on('uncaughtException', (err) => {
+    console.error(`[Uncaught exception] ${err.message}`);
+    console.error(err.stack);
+});
+process.on('unhandledRejection', (reason) => {
+    console.error(`[Unhandled rejection] ${reason?.message || reason}`);
+    if (reason?.stack) console.error(reason.stack);
+});
+
 const {
     default: makeWASocket,
     useMultiFileAuthState,
@@ -111,6 +124,28 @@ async function resolveBrandImage(brand) {
 // ── Branded reply helper: every text reply from any command goes out
 //    with the sender's own custom bot image + channel-forward tag if they
 //    set one during pairing, otherwise the default TZ MINI BOT branding ──
+// ── Cached per-number settings lookup: avoids hitting MongoDB on every
+//    single incoming message (fast response), and can't hang message
+//    processing forever if the DB is briefly slow/unreachable — falls back
+//    to the last known value (or an empty object) after 3 seconds. ──
+const userConfigCache = new Map(); // botNumber -> { data, expiresAt }
+async function getCachedUserConfig(botNumber) {
+    const cached = userConfigCache.get(botNumber);
+    if (cached && cached.expiresAt > Date.now()) return cached.data;
+
+    try {
+        const data = await Promise.race([
+            getUserConfigFromMongoDB(botNumber),
+            new Promise((resolve) => setTimeout(() => resolve(null), 3000))
+        ]);
+        const resolved = data || cached?.data || {};
+        userConfigCache.set(botNumber, { data: resolved, expiresAt: Date.now() + 5000 });
+        return resolved;
+    } catch (e) {
+        return cached?.data || {};
+    }
+}
+
 async function brandedReply(conn, from, mek, text) {
     const brand = conn.brand || null;
     const imgSrc = await resolveBrandImage(brand);
@@ -930,7 +965,7 @@ conn.ev.on('connection.update', async (update) => {
                         try {
                             let userConfig = {};
                             try {
-                                userConfig = await getUserConfigFromMongoDB(botNumber) || {};
+                                userConfig = await getCachedUserConfig(botNumber);
                             } catch (e) {
                                 userConfig = {};
                             }
@@ -1072,7 +1107,7 @@ conn.ev.on('connection.update', async (update) => {
                 // fall through to "public" no matter what `.mode` was set to.
                 let dispatchUserConfig = {};
                 try {
-                    dispatchUserConfig = await getUserConfigFromMongoDB(botNumber) || {};
+                    dispatchUserConfig = await getCachedUserConfig(botNumber);
                 } catch (e) {
                     dispatchUserConfig = {};
                 }
@@ -2253,21 +2288,6 @@ process.on('exit', () => {
     });
     const sessionDir = path.join(__dirname, 'session');
     if (fs.existsSync(sessionDir)) fs.emptyDirSync(sessionDir);
-});
-
-process.on('uncaughtException', (err) => {
-    arslanLog(`Uncaught exception: ${err.message}`, 'error');
-    console.error(err.stack);
-});
-
-// Without this, an unhandled promise rejection ANYWHERE in the app —
-// including inside a single broken command's async code — crashes the
-// entire Node process on modern Node versions, taking down every
-// connected number's session at once. Log it and keep the bot alive
-// instead.
-process.on('unhandledRejection', (reason) => {
-    arslanLog(`Unhandled rejection: ${reason?.message || reason}`, 'error');
-    if (reason?.stack) console.error(reason.stack);
 });
 
 // ============================================

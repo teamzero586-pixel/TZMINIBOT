@@ -45,8 +45,8 @@ async (conn, mek, m, { from, args, reply }) => {
         const details = videoInfo.videoDetails;
         const durationSec = parseInt(details.lengthSeconds || "0", 10);
 
-        if (durationSec > 900) { // 15 minutes safety cap
-            return reply("❌ Song is too long (max 15 minutes). Try a shorter one.");
+        if (durationSec > 480) { // 8 minutes safety cap — keeps memory usage safe on small dynos
+            return reply("❌ Song is too long (max 8 minutes). Try a shorter one.");
         }
 
         const audioStream = ytdl.downloadFromInfo(videoInfo, { filter: "audioonly", quality: "highestaudio" });

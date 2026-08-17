@@ -43,8 +43,8 @@ async (conn, mek, m, { from, reply, text }) => {
         const details = videoInfo.videoDetails;
         const durationSec = parseInt(details.lengthSeconds || "0", 10);
 
-        if (durationSec > 600) { // 10 minutes safety cap — keeps file size sane
-            return reply("❌ Video is too long (max 10 minutes). Try a shorter one.");
+        if (durationSec > 300) { // 5 minutes safety cap — keeps memory usage safe on small dynos
+            return reply("❌ Video is too long (max 5 minutes). Try a shorter one.");
         }
 
         const caption = `
