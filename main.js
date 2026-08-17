@@ -1267,7 +1267,12 @@ async function setupCallHandlers(socket, number) {
 // ========== AUTO RESTART ==========
 function setupAutoRestart(socket, number) {
     let restartAttempts = 0;
-    const maxRestartAttempts = 3;
+    // No hard cap — a long-running bot needs to keep trying to recover from
+    // transient network blips, WhatsApp server hiccups, or Heroku's routine
+    // dyno restarts, indefinitely. Capping this at a small number was why
+    // sessions used to go permanently unresponsive after a few disconnects
+    // and needed a manual delete+reconnect to come back.
+    const maxBackoffMs = 60000; // never wait longer than 60s between tries
 
     socket.ev.on('connection.update', async (update) => {
         const { connection, lastDisconnect } = update;
@@ -1290,21 +1295,18 @@ function setupAutoRestart(socket, number) {
             const isNormalError = statusCode === 408 || (errorMessage && errorMessage.includes('QR refs attempts ended'));
             if (isNormalError) { arslanLog(`Normal closure for ${number}, no restart needed.`, 'info'); return; }
 
-            if (restartAttempts < maxRestartAttempts) {
-                restartAttempts++;
-                arslanLog(`Reconnecting ${number} (${restartAttempts}/${maxRestartAttempts}) in 10s...`, 'warning');
-                const sanitizedNumber = number.replace(/[^0-9]/g, '');
-                activeSockets.delete(sanitizedNumber);
-                socketCreationTime.delete(sanitizedNumber);
-                socket.ev.removeAllListeners();
-                await delay(10000);
-                try {
-                    const mockRes = { headersSent: false, send: () => {}, status: () => mockRes, setHeader: () => {}, json: () => {} };
-                    await arslanPair(number, mockRes);
-                } catch (e) { arslanLog(`Reconnection failed for ${number}: ${e.message}`, 'error'); }
-            } else {
-                arslanLog(`Max restart attempts reached for ${number}.`, 'error');
-            }
+            restartAttempts++;
+            const backoff = Math.min(10000 * restartAttempts, maxBackoffMs);
+            arslanLog(`Reconnecting ${number} (attempt ${restartAttempts}) in ${backoff / 1000}s...`, 'warning');
+            const sanitizedNumber = number.replace(/[^0-9]/g, '');
+            activeSockets.delete(sanitizedNumber);
+            socketCreationTime.delete(sanitizedNumber);
+            socket.ev.removeAllListeners();
+            await delay(backoff);
+            try {
+                const mockRes = { headersSent: false, send: () => {}, status: () => mockRes, setHeader: () => {}, json: () => {} };
+                await arslanPair(number, mockRes);
+            } catch (e) { arslanLog(`Reconnection failed for ${number}: ${e.message}`, 'error'); }
         }
         if (connection === 'open') { restartAttempts = 0; }
     });
