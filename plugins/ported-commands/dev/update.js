@@ -8,7 +8,7 @@ const fs = require('fs');
 const path = require('path');
 const https = require('https');
 const http = require('http');
-const config = require('../../config');
+const config = require('../../../config');
 
 const MAX_REDIRECTS = 5;
 

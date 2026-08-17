@@ -4,7 +4,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const config = require('../../config');
+const config = require('../../../config');
 const { loadCommands } = require('../../utils/commandLoader');
 const ui = require('../../utils/ui');
 const MAX_CAPTION_LENGTH = 900;

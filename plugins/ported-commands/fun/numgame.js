@@ -1,4 +1,4 @@
-const config = require('../../config');
+const config = require('../../../config');
 
 const activeGames = new Map();
 const TIMEOUT = 60000;

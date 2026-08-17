@@ -1,5 +1,5 @@
-const database = require('../../database');
-const config = require('../../config');
+const database = require('../../../lib/database');
+const config = require('../../../config');
 const { jidDecode, jidEncode } = require('@whiskeysockets/baileys');
 
 const cooldown = new Map(); // key -> ts

@@ -1,5 +1,5 @@
 // commands/fun/boom.js
-const config = require('../../config');
+const config = require('../../../config');
 
 /**
  * Normalize phone number: remove non-digits

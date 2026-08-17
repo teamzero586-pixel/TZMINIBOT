@@ -1,7 +1,7 @@
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
-const config = require('../../config');
+const config = require('../../../config');
 
 const AI_MEMORY_PATH = path.join(process.cwd(), 'database', 'ai.json');
 

@@ -1,4 +1,4 @@
-const config = require('../../config');
+const config = require('../../../config');
 const { loadCommands } = require('../../utils/commandLoader');
 const fs = require('fs');
 const path = require('path');

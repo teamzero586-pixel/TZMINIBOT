@@ -2,7 +2,7 @@
  * AutoSticker Command - Enable or disable auto-sticker conversion
  */
 
-const database = require('../../database');
+const database = require('../../../lib/database');
 
 module.exports = {
   name: 'autosticker',

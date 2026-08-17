@@ -1,5 +1,5 @@
 // commands/utility/autoreact.js
-const config = require('../../config');
+const config = require('../../../config');
 
 // Database keys for global settings
 const KEY_ENABLED = 'autoreact_enabled';

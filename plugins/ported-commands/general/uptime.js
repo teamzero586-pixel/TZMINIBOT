@@ -2,7 +2,7 @@
  * Uptime Command - Display bot uptime since it was started
  */
 
-const config = require('../../config');
+const config = require('../../../config');
 
 /**
  * Format time difference into human-readable string

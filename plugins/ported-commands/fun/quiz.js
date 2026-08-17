@@ -1,4 +1,4 @@
-const config = require('../../config');
+const config = require('../../../config');
 
 const QUESTIONS = [
   { q: '🌍 Pakistan ki rajdhani kya hai?', options: ['Lahore', 'Karachi', 'Islamabad', 'Peshawar'], ans: 2 },

@@ -1,4 +1,4 @@
-const config = require('../../config');
+const config = require('../../../config');
 
 // ═══════════════════════════════════════════════════════════
 // TEAM ZERO PANEL CONFIG & GLOBAL VARIABLES

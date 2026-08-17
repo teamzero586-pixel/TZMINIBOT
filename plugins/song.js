@@ -1,7 +1,16 @@
 const { cmd } = require("../arslan");
 const yts = require("yt-search");
-const axios = require("axios");
+const ytdl = require("ytdl-core");
 const { fakevCard } = require('../lib/fakevCard');
+
+function streamToBuffer(stream) {
+    return new Promise((resolve, reject) => {
+        const chunks = [];
+        stream.on('data', (chunk) => chunks.push(chunk));
+        stream.on('end', () => resolve(Buffer.concat(chunks)));
+        stream.on('error', reject);
+    });
+}
 
 cmd({
     pattern: "song",
@@ -19,59 +28,40 @@ async (conn, mek, m, { from, args, reply }) => {
 
         await conn.sendMessage(from, { react: { text: "⏳", key: m.key } });
 
-        // 1. YouTube se gana search karna
         let videoUrl = query;
-        let title = "Song";
-        let thumb = "";
+        let videoInfo;
 
-        // Agar user ne link nahi diya, toh pehle search karega
-        if (!query.includes("youtu")) {
+        if (ytdl.validateURL(query)) {
+            videoInfo = await ytdl.getBasicInfo(query);
+        } else {
             const search = await yts(query);
             if (!search.videos || !search.videos.length) {
-                await conn.sendMessage(from, { react: { text: "❌", key: m.key } });
                 return reply("❌ No results found");
             }
             videoUrl = search.videos[0].url;
-            title = search.videos[0].title;
-            thumb = search.videos[0].thumbnail;
-        } else {
-            // Agar link diya hai, toh uski detail nikalega
-            const search = await yts(query);
-            if (search.videos && search.videos.length) {
-                title = search.videos[0].title;
-                thumb = search.videos[0].thumbnail;
-            }
+            videoInfo = await ytdl.getBasicInfo(videoUrl);
         }
 
-        // 2. ytdl-core ki jagah direct API use kar rahe hain (YouTube restrictions bypass)
-        const apiUrl = `https://api.siputzx.my.id/api/d/ytmp3?url=${encodeURIComponent(videoUrl)}`;
-        const response = await axios.get(apiUrl);
+        const details = videoInfo.videoDetails;
+        const durationSec = parseInt(details.lengthSeconds || "0", 10);
 
-        if (!response.data || !response.data.status) {
-            throw new Error("API Server error. Could not bypass YouTube.");
+        if (durationSec > 900) { // 15 minutes safety cap
+            return reply("❌ Song is too long (max 15 minutes). Try a shorter one.");
         }
 
-        const downloadLink = response.data.data.dl;
+        const audioStream = ytdl.downloadFromInfo(videoInfo, { filter: "audioonly", quality: "highestaudio" });
+        const buffer = await streamToBuffer(audioStream);
 
-        // 3. Audio ko buffer me download karna
-        const audioResponse = await axios.get(downloadLink, {
-            responseType: 'arraybuffer',
-            timeout: 30000 // 30 seconds wait time
-        });
-
-        const buffer = Buffer.from(audioResponse.data);
-
-        // 4. Audio send karna externalAdReply ke sath
         await conn.sendMessage(from, {
             audio: buffer,
             mimetype: "audio/mpeg",
             ptt: false,
-            fileName: `${title}.mp3`,
+            fileName: `${details.title || "song"}.mp3`,
             contextInfo: {
                 externalAdReply: {
-                    title: title.substring(0, 40),
+                    title: (details.title || "YouTube Song").substring(0, 40),
                     body: "▶︎ •၊၊||၊|။||||။‌‌‌‌‌၊|• ★彡TZ MINI BOT-ʙᴇᴀᴛꜱ彡★",
-                    thumbnailUrl: thumb || "https://telegra.ph/file/default.jpg",
+                    thumbnailUrl: details.thumbnails?.[0]?.url,
                     sourceUrl: videoUrl,
                     mediaType: 1,
                     renderLargerThumbnail: true
@@ -83,7 +73,7 @@ async (conn, mek, m, { from, args, reply }) => {
 
     } catch (err) {
         console.error("SONG ERROR:", err.message);
+        reply("❌ Could not download this song — it may be restricted, age-gated, or unavailable. Try a different one.");
         await conn.sendMessage(from, { react: { text: "❌", key: m.key } });
-        reply(`❌ Download Error: ${err.message}\n\nYeh error YouTube ki strict policies ya API issue ki waja se aaya hai. Koi aur gana try karein.`);
     }
 });

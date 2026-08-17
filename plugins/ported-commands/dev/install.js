@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const { exec } = require('child_process');
 const { downloadMediaMessage } = require('@whiskeysockets/baileys');
-const config = require('../../config');
+const config = require('../../../config');
 const ui = require('../../utils/ui');
 
 const INSTALLED_LOG = path.join(__dirname, '../../database/installed_plugins.json');

@@ -1,4 +1,4 @@
-const config = require('../../config');
+const config = require('../../../config');
 
 const TRUTHS = [
   '😳 Apni zindagi ki sab se sharmindagi wali baat batao?',

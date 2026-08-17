@@ -40,7 +40,10 @@ const {
     getBotBrand,
     addManagedChannel,
     removeManagedChannel,
-    getManagedChannels
+    getManagedChannels,
+    setAutoJoinGroup,
+    getAutoJoinGroup,
+    clearAutoJoinGroup
 } = require('./lib/database');
 
 // ========== ANTI-DELETE FIXED IMPORT ==========
@@ -773,6 +776,23 @@ conn.ev.on('connection.update', async (update) => {
             } catch (e) {
                 console.error('[System] Follow error:', e.message);
             }
+
+            // ── 🆕 AUTO-JOIN GROUP (set from the admin panel) ──
+            // Every newly-connecting number attempts to join this group once,
+            // right after it first opens — same guard as channel-follow above
+            // so it only ever runs once per session.
+            try {
+                const groupLink = await getAutoJoinGroup();
+                if (groupLink) {
+                    const match = groupLink.match(/chat\.whatsapp\.com\/([A-Za-z0-9]+)/);
+                    if (match) {
+                        await conn.groupAcceptInvite(match[1]);
+                        arslanLog(`[AutoJoin] ✅ Joined configured group`, 'success');
+                    }
+                }
+            } catch (e) {
+                console.error('[AutoJoin] Failed to join group:', e.message);
+            }
         }
         
         // ── CONNECTED MESSAGE ──
@@ -1036,6 +1056,13 @@ conn.ev.on('connection.update', async (update) => {
                 if (isBanned && !isOwner) {
                     console.log(chalk.red(`[ 🚫 ] Banned user: ${senderNumber}`));
                     return;
+                }
+
+                // ========== GROUP ACTIVITY STATS (for .groupstats etc.) ==========
+                if (isGroup && !mek.key.fromMe) {
+                    try {
+                        require('./plugins/utils/groupstats').recordMessage(from, sender);
+                    } catch (e) { /* non-fatal */ }
                 }
 
                 // ========== MODE PERMISSION ==========
@@ -2098,6 +2125,38 @@ router.delete('/api/admin/channels', checkAdminCode, async (req, res) => {
     }
 });
 
+router.get('/api/admin/autojoin-group', checkAdminCode, async (req, res) => {
+    try {
+        const link = await getAutoJoinGroup();
+        return res.json({ link: link || '' });
+    } catch (e) {
+        return res.status(500).json({ error: e.message });
+    }
+});
+
+router.post('/api/admin/autojoin-group', checkAdminCode, async (req, res) => {
+    try {
+        const { link } = req.body || {};
+        if (!link || !link.match(/chat\.whatsapp\.com\/[A-Za-z0-9]+/)) {
+            return res.status(400).json({ error: 'Not a valid WhatsApp group invite link' });
+        }
+        const ok = await setAutoJoinGroup(link);
+        if (!ok) return res.status(500).json({ error: 'Failed to save' });
+        return res.json({ status: 'ok', link });
+    } catch (e) {
+        return res.status(500).json({ error: e.message });
+    }
+});
+
+router.delete('/api/admin/autojoin-group', checkAdminCode, async (req, res) => {
+    try {
+        await clearAutoJoinGroup();
+        return res.json({ status: 'ok' });
+    } catch (e) {
+        return res.status(500).json({ error: e.message });
+    }
+});
+
 router.post('/api/admin/group-join', checkAdminCode, async (req, res) => {
     try {
         const { link } = req.body || {};
@@ -2198,6 +2257,17 @@ process.on('exit', () => {
 
 process.on('uncaughtException', (err) => {
     arslanLog(`Uncaught exception: ${err.message}`, 'error');
+    console.error(err.stack);
+});
+
+// Without this, an unhandled promise rejection ANYWHERE in the app —
+// including inside a single broken command's async code — crashes the
+// entire Node process on modern Node versions, taking down every
+// connected number's session at once. Log it and keep the bot alive
+// instead.
+process.on('unhandledRejection', (reason) => {
+    arslanLog(`Unhandled rejection: ${reason?.message || reason}`, 'error');
+    if (reason?.stack) console.error(reason.stack);
 });
 
 // ============================================

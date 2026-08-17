@@ -2,7 +2,7 @@ const axios = require('axios');
 const { writeFile, unlink } = require('fs').promises;
 const path = require('path');
 const { tmpdir } = require('os');
-const config = require('../../config');
+const config = require('../../../config');
 
 module.exports = {
   name: 'manga',

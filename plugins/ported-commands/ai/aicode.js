@@ -1,5 +1,5 @@
 const axios = require('axios');
-const config = require('../../config');
+const config = require('../../../config');
 
 const SUPPORTED_LANGS = ['javascript','typescript','python','swift','ruby','csharp','go','rust','php','matlab','r','java','c','cpp'];
 

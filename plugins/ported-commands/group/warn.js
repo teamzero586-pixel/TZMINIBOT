@@ -2,8 +2,8 @@
  * Warn Command - Warn a user
  */
 
-const database = require('../../database');
-const config = require('../../config');
+const database = require('../../../lib/database');
+const config = require('../../../config');
 
 module.exports = {
   name: 'warn',

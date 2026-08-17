@@ -1,4 +1,4 @@
-const config = require('../../config');
+const config = require('../../../config');
 
 // ─── TEAM ZERO PANEL CONFIG ────────────────────────────────
 const TZ_PANEL_URL = "https://teamzeropanel-2414ae86a1c1.herokuapp.com/api";

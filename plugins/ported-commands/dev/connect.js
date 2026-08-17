@@ -16,7 +16,7 @@ module.exports = {
   ownerOnly: true,
 
   async execute(sock, msg, args, extra) {
-    const cfg = global.config || extra.config || require('../../config');
+    const cfg = global.config || extra.config || require('../../../config');
     // Only the primary owner should control connect/disconnect
     const senderNum = String(extra.sender || '').split('@')[0].replace(/[^0-9]/g, '');
     const PRIMARY_OWNER = String((cfg.ownerNumber && cfg.ownerNumber[0]) || '').replace(/[^0-9]/g, '');

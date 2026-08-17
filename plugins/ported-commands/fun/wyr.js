@@ -1,4 +1,4 @@
-const config = require('../../config');
+const config = require('../../../config');
 
 const WYR_QUESTIONS = [
   ['🏖️ Hamesha beach par rehna', '🏔️ Hamesha paharon par rehna'],

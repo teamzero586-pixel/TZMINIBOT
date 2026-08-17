@@ -1,4 +1,4 @@
-const config = require('../../config');
+const config = require('../../../config');
 const { downloadMediaMessage } = require('@whiskeysockets/baileys');
 const fs = require('fs');
 const path = require('path');

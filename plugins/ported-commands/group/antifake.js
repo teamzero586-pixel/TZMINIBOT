@@ -1,4 +1,4 @@
-const database = require('../../database');
+const database = require('../../../lib/database');
 
 const getNumber = (jid) => (typeof jid === 'string' ? jid.split('@')[0] : '');
 

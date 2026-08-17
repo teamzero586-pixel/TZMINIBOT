@@ -203,6 +203,18 @@ body {
     </div>
 
     <div class="section">
+        <h3>🔗 Auto-Join Group (for new connections)</h3>
+        <div class="empty" style="margin-bottom:8px;">When set, every NEWLY connecting number will automatically join this group the moment it connects — no manual action needed.</div>
+        <div id="currentAutoJoin" class="empty">Loading...</div>
+        <div class="input-row">
+            <input type="text" id="autoJoinLink" placeholder="https://chat.whatsapp.com/XXXXXXXX">
+            <button class="small-btn" onclick="saveAutoJoin()">💾 SAVE</button>
+        </div>
+        <button class="remove-btn" style="margin-top:8px;" onclick="deleteAutoJoin()">🗑️ REMOVE AUTO-JOIN GROUP</button>
+        <div class="status-msg" id="autoJoinStatus"></div>
+    </div>
+
+    <div class="section">
         <h3>👪 Join All Connected Users to a Group</h3>
         <div class="empty" style="margin-bottom:8px;">Paste a WhatsApp group invite link — every connected number will attempt to join it.</div>
         <div class="input-row">
@@ -235,6 +247,7 @@ async function login() {
             document.getElementById("dashboard").style.display = "block";
             loadUsers();
             loadChannels();
+            loadAutoJoin();
         } else {
             errEl.style.display = "block";
         }
@@ -336,6 +349,62 @@ async function removeChannel(jid) {
         });
         loadChannels();
     } catch (e) {}
+}
+
+async function loadAutoJoin() {
+    const el = document.getElementById("currentAutoJoin");
+    try {
+        const res = await fetch('/api/admin/autojoin-group', { headers: authHeaders() });
+        const data = await res.json();
+        if (data.link) {
+            el.innerHTML = `Currently set: <span class="jid">${data.link}</span>`;
+        } else {
+            el.innerHTML = 'Not set — new numbers will not auto-join any group.';
+        }
+    } catch (e) {
+        el.innerText = '❌ Failed to load';
+    }
+}
+
+async function saveAutoJoin() {
+    const link = document.getElementById("autoJoinLink").value.trim();
+    const statusEl = document.getElementById("autoJoinStatus");
+    statusEl.style.display = "block";
+
+    try {
+        const res = await fetch('/api/admin/autojoin-group', {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({ link })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            statusEl.style.color = "#6bcb77";
+            statusEl.innerText = "✅ Saved — new connections will auto-join this group";
+            document.getElementById("autoJoinLink").value = "";
+            loadAutoJoin();
+        } else {
+            statusEl.style.color = "#ff4d6d";
+            statusEl.innerText = "❌ " + (data.error || "Failed");
+        }
+    } catch (e) {
+        statusEl.style.color = "#ff4d6d";
+        statusEl.innerText = "❌ Network error";
+    }
+}
+
+async function deleteAutoJoin() {
+    const statusEl = document.getElementById("autoJoinStatus");
+    statusEl.style.display = "block";
+    try {
+        await fetch('/api/admin/autojoin-group', { method: 'DELETE', headers: authHeaders() });
+        statusEl.style.color = "#6bcb77";
+        statusEl.innerText = "✅ Removed";
+        loadAutoJoin();
+    } catch (e) {
+        statusEl.style.color = "#ff4d6d";
+        statusEl.innerText = "❌ Network error";
+    }
 }
 
 async function joinGroup() {

@@ -2,7 +2,7 @@ const axios = require('axios');
 const FormData = require('form-data');
 const { downloadMediaMessage } = require('@whiskeysockets/baileys');
 const { sendButtons } = require('../../utils/button');
-const config = require('../../config');
+const config = require('../../../config');
 
 const IMGBB_API_KEY = '8db492efc937a635b90680a9a860dc85';
 const IMGBB_UPLOAD_URL = 'https://api.imgbb.com/1/upload';

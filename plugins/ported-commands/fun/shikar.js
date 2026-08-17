@@ -1,4 +1,4 @@
-const config = require('../../config');
+const config = require('../../../config');
 
 const ROASTS = [
   '🤣 Yaar tum itne funny ho ke mirror bhi tum se dar ke toot jata hai!',

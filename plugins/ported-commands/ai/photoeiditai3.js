@@ -1,5 +1,5 @@
 const axios = require('axios');
-const config = require('../../config');
+const config = require('../../../config');
 const { uploadToCatbox } = require('../../utils/catbox');
 
 const MODELS = ['ezremove_4.0', 'ezremove_4.0_pro', 'ezremove_3.0', 'ezremove_3.0_pro', 'nano_banana', 'nano_banana_pro', 'seedream_4', 'seedream_45'];

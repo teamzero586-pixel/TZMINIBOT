@@ -1,4 +1,4 @@
-const config = require('../../config');
+const config = require('../../../config');
 
 const KEY_VIEW = 'autostatus_view';
 const KEY_LIKE = 'autostatus_like';

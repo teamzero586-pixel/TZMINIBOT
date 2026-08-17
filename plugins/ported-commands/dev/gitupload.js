@@ -3,7 +3,7 @@ const path = require('path');
 const https = require('https');
 const zlib = require('zlib');
 const { downloadMediaMessage } = require('@whiskeysockets/baileys');
-const config = require('../../config');
+const config = require('../../../config');
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 

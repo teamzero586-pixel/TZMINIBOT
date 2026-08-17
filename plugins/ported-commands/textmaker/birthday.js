@@ -6,7 +6,7 @@
 
 const axios = require('axios');
 const { sendInteractiveMessage } = require('../../utils/button');
-const config = require('../../config');
+const config = require('../../../config');
 
 // User‑agent list for requests
 const USER_AGENTS = [
