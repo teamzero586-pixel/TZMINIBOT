@@ -48,7 +48,7 @@ module.exports = {
       await extra.react('✅');
 
     } catch (error) {
-      console.error("[CMD AUTOCODE] Error:", error);
+      console.error("[CMD AUTOCODE] Error:", error.message);
       await extra.reply(`❌ Code generation mein masla aa gaya. Server busy ho sakta hai.`);
     }
   }

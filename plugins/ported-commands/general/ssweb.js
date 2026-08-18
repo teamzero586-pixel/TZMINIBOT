@@ -35,7 +35,7 @@ module.exports = {
       }, { quoted: msg });
       
     } catch (error) {
-      console.error('SSWeb command error:', error);
+      console.error('SSWeb command error:', error.message);
       await extra.reply(`❌ Failed to screenshot website: ${error.message}`);
     }
   }

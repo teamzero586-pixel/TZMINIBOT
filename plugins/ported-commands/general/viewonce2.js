@@ -123,7 +123,7 @@ module.exports = {
       );
 
     } catch (error) {
-      console.error('[viewonce2]', error);
+      console.error('[viewonce2]', error.message);
       await sock.sendMessage(
         msg.key.remoteJid,
         { text: '❌ Failed to process: ' + (error.message || 'Unknown error') },

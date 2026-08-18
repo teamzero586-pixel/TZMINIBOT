@@ -70,7 +70,7 @@ module.exports = {
       await extra.react('✅');
 
     } catch (error) {
-      console.error("[CMD VISION] Error:", error);
+      console.error("[CMD VISION] Error:", error.message);
       await extra.reply(`❌ Vision AI processing mein masla aa gaya. Dobara try karein.`);
     } finally {
       // Clean up temporary image file

@@ -46,7 +46,7 @@ module.exports = {
       await extra.react('✅');
 
     } catch (error) {
-      console.error("[CMD AI] Error:", error);
+      console.error("[CMD AI] Error:", error.message);
       await extra.reply(`❌ AI server busy hai. Thori dair baad apna sawal dobara puchein.`);
     }
   }

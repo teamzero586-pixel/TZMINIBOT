@@ -129,7 +129,7 @@ module.exports = {
         await extra.react('🤖');
       }
     } catch (error) {
-      console.error('ProBoy AI error:', error);
+      console.error('ProBoy AI error:', error.message);
       let errorMsg = `❌ *AI Error:* ${error.message}`;
       if (error.response) errorMsg += `\nAPI Response: ${error.response.status}`;
       await extra.reply(errorMsg);

@@ -36,7 +36,7 @@ module.exports = {
       await extra.react('✅');
 
     } catch (error) {
-      console.error("[CMD IMAGINE] Error:", error);
+      console.error("[CMD IMAGINE] Error:", error.message);
       await extra.reply(`❌ Image generate karne mein masla aaya. Prompt thora change kar ke try karein.`);
     }
   }

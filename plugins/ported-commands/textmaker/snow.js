@@ -33,7 +33,7 @@ module.exports = {
       }, { quoted: msg });
       
     } catch (error) {
-      console.error('Error in snow command:', error);
+      console.error('Error in snow command:', error.message);
       await sock.sendMessage(msg.key.remoteJid, { 
         text: `Error: ${error.message}` 
       }, { quoted: msg });

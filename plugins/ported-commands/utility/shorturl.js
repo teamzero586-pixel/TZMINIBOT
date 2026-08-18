@@ -118,7 +118,7 @@ _Powered by ${config.BOT_NAME}_`;
       });
       await react('✅');
     } catch (error) {
-      console.error('ShortURL error:', error);
+      console.error('ShortURL error:', error.message);
       await reply(`❌ Unexpected error: ${error.message}`);
       await react('❌');
     }

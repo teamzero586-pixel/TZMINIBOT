@@ -84,7 +84,7 @@ module.exports = {
       }
       
     } catch (error) {
-      console.error('Error in simage command:', error);
+      console.error('Error in simage command:', error.message);
       await extra.reply(`❌ Failed to convert sticker to image.\n\nError: ${error.message}`);
     }
   }

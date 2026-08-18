@@ -83,7 +83,7 @@ module.exports = {
             }
             
         } catch (error) {
-            console.error('GitHub command error:', error);
+            console.error('GitHub command error:', error.message);
             await extra.reply(`❌ Error: ${error.message}`);
         }
     }

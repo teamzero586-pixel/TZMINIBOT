@@ -72,7 +72,7 @@ module.exports = {
       await reply(numbers.join(','));
       await react('✅');
     } catch (error) {
-      console.error('numlist error:', error);
+      console.error('numlist error:', error.message);
       await reply(`❌ ${error.message}`);
       await react('❌');
     }

@@ -46,7 +46,7 @@ cmd({
         await conn.sendMessage(from, { react: { text: '✅', key: m.key } });
 
     } catch (error) {
-        console.error('IGDL Error:', error);
+        console.error('IGDL Error:', error.message);
         await conn.sendMessage(from, { react: { text: '❌', key: m.key } });
         reply("❌ Download failed. Try again later.");
     }
@@ -99,7 +99,7 @@ cmd({
 
     await conn.sendMessage(from, { react: { text: '✅', key: m.key } });
   } catch (error) {
-    console.error('Error downloading video:', error);
+    console.error('Error downloading video:', error.message);
     await conn.sendMessage(from, { react: { text: '❌', key: m.key } });
     reply('❌ API 2 failed. Try .igdl for primary download.');
   }
@@ -149,7 +149,7 @@ cmd({
 
     await conn.sendMessage(from, { react: { text: '✅', key: m.key } });
   } catch (error) {
-    console.error('IGDL5 Error:', error);
+    console.error('IGDL5 Error:', error.message);
     reply('❌ Failed to download the Instagram video. Please try again later.');
     await conn.sendMessage(from, { react: { text: '❌', key: m.key } });
   }
@@ -190,7 +190,7 @@ async (conn, mek, m, { from, args, q, reply }) => {
         }, { quoted: fakevCard });
         
     } catch (e) {
-        console.error("Error in Instagram downloader command:", e);
+        console.error("Error in Instagram downloader command:", e.message);
         reply(`An error occurred: ${e.message}`);
     }
 });

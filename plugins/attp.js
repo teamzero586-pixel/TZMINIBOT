@@ -36,7 +36,7 @@ async (conn, mek, m, { args, reply }) => {
         )
 
     } catch (e) {
-        console.log("ATTP ERROR:", e)
+        console.log("ATTP ERROR:", e.message)
         reply("*❌ STICKER BANANE ME ERROR AYA 🥺*")
     }
 })

@@ -49,7 +49,7 @@ async (conn, mek, m, { from, q, reply }) => {
         )
 
     } catch (e) {
-        console.log("YTS ERROR:", e)
+        console.log("YTS ERROR:", e.message)
         reply("*❌ YOUTUBE SEARCH ME ERROR AYA 🥺*")
     }
 })

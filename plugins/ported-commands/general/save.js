@@ -78,7 +78,7 @@ module.exports = {
             return reply('❌ Failed to download media.');
           }
         } catch (err) {
-          console.error('Media download error:', err);
+          console.error('Media download error:', err.message);
           return reply('❌ Could not download media. It may be expired or unsupported.');
         }
       } else {
@@ -98,7 +98,7 @@ module.exports = {
 
       await react('✅');
     } catch (error) {
-      console.error('Save command error:', error);
+      console.error('Save command error:', error.message);
       await reply(`❌ Error: ${error.message}`);
       await react('❌');
     }

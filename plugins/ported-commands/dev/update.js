@@ -174,7 +174,7 @@ module.exports = {
 
       setTimeout(() => process.exit(0), 500);
     } catch (error) {
-      console.error('Update failed:', error);
+      console.error('Update failed:', error.message);
       await sock.sendMessage(chatId, { text: `❌ Update failed:\n${String(error.message || error)}` }, { quoted: msg });
     }
   }

@@ -44,7 +44,7 @@ module.exports = {
       }, { quoted: msg });
       
     } catch (error) {
-      console.error('ResetWarn command error:', error);
+      console.error('ResetWarn command error:', error.message);
       await extra.reply(`❌ Error: ${error.message}`);
     }
   }

@@ -46,7 +46,7 @@ Type .myactivity to see your stats.
             }, { quoted: msg });
 
         } catch (err) {
-            console.error('[groupstats cmd] error:', err);
+            console.error('[groupstats cmd] error:', err.message);
             extra.reply('❌ Error loading stats.');
         }
     }

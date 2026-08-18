@@ -132,7 +132,7 @@ module.exports = {
 
       await react('✅');
     } catch (error) {
-      console.error('Fancy command error:', error);
+      console.error('Fancy command error:', error.message);
       await reply(`❌ Unexpected error: ${error.message}`);
       await react('❌');
     }

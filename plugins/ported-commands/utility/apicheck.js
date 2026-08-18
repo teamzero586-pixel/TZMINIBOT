@@ -64,7 +64,7 @@ module.exports = {
       await extra.react('✅');
 
     } catch (error) {
-      console.error("[CMD APICHECK] Error:", error);
+      console.error("[CMD APICHECK] Error:", error.message);
       await extra.react('❌');
       await extra.reply(`❌ API check karne mein nakam rahe. Mumkin hai ke URL ghalat ho ya API timeout ho gayi ho.`);
     }

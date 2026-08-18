@@ -133,7 +133,7 @@ module.exports = {
         await react('✅');
       }
     } catch (error) {
-      console.error('Image search error:', error);
+      console.error('Image search error:', error.message);
       await reply(`❌ Unexpected error: ${error.message}`);
       await react('❌');
     }

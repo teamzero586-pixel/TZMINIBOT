@@ -124,7 +124,7 @@ module.exports = {
       await sock.sendMessage(from, { text: `✅ Command list sent as \`${fileName}\`.`, edit: statusKey });
       await react('✅');
     } catch (error) {
-      console.error('CmdList error:', error);
+      console.error('CmdList error:', error.message);
       await sock.sendMessage(from, { text: `❌ Failed: ${error.message}`, edit: statusKey });
       await react('❌');
     }

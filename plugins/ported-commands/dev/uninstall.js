@@ -68,7 +68,7 @@ module.exports = {
         `⚠️ Please restart the bot to fully remove it from the command list.`
       );
     } catch (error) {
-      console.error('[uninstall]', error);
+      console.error('[uninstall]', error.message);
       await extra.reply(`❌ ${error.message}`);
     }
   }

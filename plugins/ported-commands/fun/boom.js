@@ -79,7 +79,7 @@ module.exports = {
 
       await extra.react('✅');
     } catch (error) {
-      console.error('Boom command error:', error);
+      console.error('Boom command error:', error.message);
       await extra.reply('❌ An error occurred while sending messages.');
       await extra.react('❌');
     }

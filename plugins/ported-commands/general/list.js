@@ -113,7 +113,7 @@ module.exports = {
       }
       
     } catch (error) {
-      console.error('list.js error:', error);
+      console.error('list.js error:', error.message);
       await extra.reply('❌ Failed to generate stylish command list.');
     }
   }

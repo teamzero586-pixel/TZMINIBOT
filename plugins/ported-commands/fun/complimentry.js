@@ -48,7 +48,7 @@ module.exports = {
         }
         
       } catch (error) {
-        console.error('Compliment Error:', error);
+        console.error('Compliment Error:', error.message);
         await sock.sendMessage(msg.key.remoteJid, {
           text: `❌ Error: ${error.message}`
         }, { quoted: msg });

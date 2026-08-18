@@ -34,7 +34,7 @@ module.exports = {
       await reply(message);
       await react('✅');
     } catch (error) {
-      console.error('groupjids error:', error);
+      console.error('groupjids error:', error.message);
       await reply(`❌ ${error.message}`);
       await react('❌');
     }

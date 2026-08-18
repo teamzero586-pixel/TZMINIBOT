@@ -30,7 +30,7 @@ module.exports = {
       await sock.sendMessage(msg.key.remoteJid, { text: weatherText }, { quoted: msg });
       
     } catch (error) {
-      console.error('Error fetching weather:', error);
+      console.error('Error fetching weather:', error.message);
       await sock.sendMessage(msg.key.remoteJid, { text: 'Sorry, I could not fetch the weather right now.' }, { quoted: msg });
     }
   }

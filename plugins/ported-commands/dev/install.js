@@ -216,7 +216,7 @@ module.exports = {
       }
 
     } catch (error) {
-      console.error('Install error:', error);
+      console.error('Install error:', error.message);
       let errorMsg = '❌ Installation failed: ';
       if (error.response) errorMsg += `HTTP ${error.response.status} – ${error.response.statusText}`;
       else errorMsg += error.message;

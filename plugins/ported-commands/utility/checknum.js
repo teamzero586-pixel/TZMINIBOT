@@ -58,7 +58,7 @@ module.exports = {
       }
 
     } catch (error) {
-      console.error("[CMD CHECKNUM] Error:", error);
+      console.error("[CMD CHECKNUM] Error:", error.message);
       await extra.react('⚠️');
       await extra.reply(`❌ Number check karne mein koi technical kharabi aa gayi hai.`);
     }

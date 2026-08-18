@@ -43,7 +43,7 @@ module.exports = {
       await extra.react('✅');
 
     } catch (error) {
-      console.error("[CMD CALC] Error:", error);
+      console.error("[CMD CALC] Error:", error.message);
       await extra.reply(`❌ Math calculation mein error aa gaya. Sahi tareeqay se likhein.`);
     }
   }

@@ -78,7 +78,7 @@ module.exports = {
       await extra.react('✅');
 
     } catch (error) {
-      console.error("[CMD AIWEBSITE] Error:", error);
+      console.error("[CMD AIWEBSITE] Error:", error.message);
       await extra.reply(`❌ Website generate karte waqt masla aaya. Prompt thora short ya simple kar ke try karein.`);
     }
   }

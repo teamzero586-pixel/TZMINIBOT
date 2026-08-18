@@ -283,7 +283,7 @@ module.exports = {
       await extra.reply(`✅ Published \`${remotePath}\` to ${repo}\nCommit: \`${result.commit.sha}\``);
       await extra.react('✅');
     } catch (error) {
-      console.error('[publish] error:', error);
+      console.error('[publish] error:', error.message);
       await extra.reply(`❌ Upload failed: ${error.response?.data?.message || error.message}`);
       await extra.react('❌');
     }

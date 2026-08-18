@@ -35,7 +35,7 @@ module.exports = {
       }, { quoted: msg });
       
     } catch (error) {
-      console.error('Error in 1917 command:', error);
+      console.error('Error in 1917 command:', error.message);
       await sock.sendMessage(msg.key.remoteJid, { 
         text: `Error: ${error.message}` 
       }, { quoted: msg });

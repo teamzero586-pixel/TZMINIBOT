@@ -49,7 +49,7 @@ module.exports = {
       
       return extra.reply('❌ Invalid option!\nUsage: .autosticker <on/off>');
     } catch (error) {
-      console.error('[AutoSticker Command Error]:', error);
+      console.error('[AutoSticker Command Error]:', error.message);
       return extra.reply('❌ Error updating autosticker setting.');
     }
   }

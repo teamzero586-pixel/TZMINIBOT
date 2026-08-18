@@ -66,7 +66,7 @@ module.exports = {
 
       await sock.sendMessage(extra.from, { text: out, mentions: [a, b] }, { quoted: msg });
     } catch (error) {
-      console.error('[ship] ERROR:', error);
+      console.error('[ship] ERROR:', error.message);
       await extra.reply('❌ Something went wrong while shipping.');
     }
   }

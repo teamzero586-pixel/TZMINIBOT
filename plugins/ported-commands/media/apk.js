@@ -175,7 +175,7 @@ _Powered by ${config.BOT_NAME}_`;
 
       await react('✅');
     } catch (error) {
-      console.error('APK download error:', error);
+      console.error('APK download error:', error.message);
       await reply(`❌ Unexpected error: ${error.message}`);
       await react('❌');
     }

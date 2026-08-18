@@ -115,7 +115,7 @@ module.exports = {
       }
       
     } catch (error) {
-      console.error('Error in random command:', error);
+      console.error('Error in random command:', error.message);
       
       if (error.response?.status === 404) {
         await extra.reply('❌ Anime data not found. Please try again.');

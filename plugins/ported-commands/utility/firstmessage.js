@@ -200,7 +200,7 @@ module.exports = {
           return extra.reply('✅ Greeted list cleared.');
       }
     } catch (error) {
-      console.error('[firstmessage]', error);
+      console.error('[firstmessage]', error.message);
       await extra.reply(`❌ ${error.message}`);
     }
   }

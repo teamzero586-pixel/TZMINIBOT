@@ -40,7 +40,7 @@ module.exports = {
       await extra.react('✅');
 
     } catch (error) {
-      console.error("[CMD FLUX] Error:", error);
+      console.error("[CMD FLUX] Error:", error.message);
       await extra.reply(`❌ Tasveer generate karte waqt masla aa gaya. Prompt thora short ya clear kar ke dobara try karein.`);
     }
   }

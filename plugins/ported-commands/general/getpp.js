@@ -93,7 +93,7 @@ module.exports = {
       }
 
     } catch (error) {
-      console.error('Unexpected error in getpp:', error);
+      console.error('Unexpected error in getpp:', error.message);
       extra.reply('❌ An unexpected error occurred. Please try again later.');
     }
   }

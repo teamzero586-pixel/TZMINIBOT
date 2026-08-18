@@ -71,7 +71,7 @@ module.exports = {
       }, { quoted: msg });
       
     } catch (error) {
-      console.error('Error in pies command:', error);
+      console.error('Error in pies command:', error.message);
       await extra.reply(`❌ Failed to fetch image: ${error.message}`);
     }
   }

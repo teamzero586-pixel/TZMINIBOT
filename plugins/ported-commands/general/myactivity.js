@@ -47,7 +47,7 @@ Keep chatting! 💬
             }, { quoted: msg });
 
         } catch (err) {
-            console.error('[myactivity cmd] error:', err);
+            console.error('[myactivity cmd] error:', err.message);
             extra.reply('❌ Error loading your activity stats.');
         }
     }

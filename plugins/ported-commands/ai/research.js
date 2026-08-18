@@ -46,7 +46,7 @@ module.exports = {
       await extra.react('✅');
 
     } catch (error) {
-      console.error("[CMD RESEARCH] Error:", error);
+      console.error("[CMD RESEARCH] Error:", error.message);
       await extra.reply(`❌ Research process mein masla aa gaya. Thori dair baad try karein.`);
     }
   }

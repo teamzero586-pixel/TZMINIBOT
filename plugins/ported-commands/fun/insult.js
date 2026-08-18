@@ -28,7 +28,7 @@ module.exports = {
       const line = insults[Math.floor(Math.random() * insults.length)];
       await sock.sendMessage(extra.from, { text: `${line}`, mentions: [targetId] }, { quoted: msg });
     } catch (error) {
-      console.error('[insult] ERROR:', error);
+      console.error('[insult] ERROR:', error.message);
       await extra.reply('❌ Something went wrong.');
     }
   }

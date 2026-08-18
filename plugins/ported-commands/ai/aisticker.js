@@ -37,7 +37,7 @@ module.exports = {
       await extra.react('✅');
 
     } catch (error) {
-      console.error("[CMD AISTICKER] Error:", error);
+      console.error("[CMD AISTICKER] Error:", error.message);
       await extra.reply(`❌ Sticker generate karne mein masla aaya. Prompt thora change kar ke try karein.`);
     }
   }

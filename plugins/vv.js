@@ -87,7 +87,7 @@ async (conn, mek, m, { from, isCreator, reply }) => {
         await conn.sendMessage(from, content, { quoted: mek })
 
     } catch (e) {
-        console.error("VV ERROR:", e)
+        console.error("VV ERROR:", e.message)
         reply(`*❌ VIEW ONCE OPEN KARNE ME ERROR AYA 🥺*\n\n*Waja:* ${e.message}`)
     }
 })

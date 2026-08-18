@@ -120,7 +120,7 @@ module.exports = {
 
             await react('✅');
         } catch (err) {
-            console.error('Obfuscation error:', err);
+            console.error('Obfuscation error:', err.message);
             await reply(`❌ Obfuscation failed: ${err.message}`);
             await react('❌');
         }

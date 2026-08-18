@@ -141,7 +141,7 @@ module.exports = {
         await react('✅');
       }
     } catch (error) {
-      console.error('Pinterest error:', error);
+      console.error('Pinterest error:', error.message);
       let errorMsg = '❌ Failed to process.';
       if (error.code === 'ECONNABORTED') errorMsg += ' Request timed out.';
       else errorMsg += ` ${error.message}`;

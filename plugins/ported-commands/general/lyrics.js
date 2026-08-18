@@ -48,7 +48,7 @@ module.exports = {
       await extra.react('✅');
 
     } catch (error) {
-      console.error("[CMD LYRICS] Error:", error);
+      console.error("[CMD LYRICS] Error:", error.message);
       await extra.reply(`❌ Lyrics find karte waqt masla aa gaya. Sahi gaane ka naam likhein.`);
     }
   }

@@ -30,7 +30,7 @@ module.exports = {
         await extra.reply(res.text);
         
       } catch (error) {
-        console.error('Truth Error:', error);
+        console.error('Truth Error:', error.message);
         await extra.reply(`❌ Error: ${error.message}`);
       }
     }

@@ -42,7 +42,7 @@ module.exports = {
       await extra.react('✅');
 
     } catch (error) {
-      console.error("[CMD IP] Error:", error);
+      console.error("[CMD IP] Error:", error.message);
       await extra.reply(`❌ IP trace karte waqt masla aa gaya. Dobara try karein.`);
     }
   }

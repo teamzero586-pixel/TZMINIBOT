@@ -38,7 +38,7 @@ cmd({
     reply(`*MENE APKO UNBLOCK KAR DIYA HAI ☺️*`, { mentions: [jid] });
 
   } catch (e) {
-    console.log("UNBLOCK ERROR:", e);
+    console.log("UNBLOCK ERROR:", e.message);
     reply("*❌ UNBLOCK NAHI HO PAYA 😔*");
   }
 });

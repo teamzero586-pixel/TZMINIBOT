@@ -211,7 +211,7 @@ module.exports = {
         await extra.reply(`✅ Text auto‑reply added!\n• *Trigger:* ${trigger}\n• *Response:* ${responseText}`);
       }
     } catch (error) {
-      console.error('[autoreply]', error);
+      console.error('[autoreply]', error.message);
       await extra.reply(`❌ ${error.message}`);
     }
   }

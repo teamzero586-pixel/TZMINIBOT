@@ -134,7 +134,7 @@ module.exports = {
       await sock.sendMessage(extra.from, { sticker: finalBuffer }, { quoted: msg });
       
     } catch (error) {
-      console.error('Sticker command error:', error);
+      console.error('Sticker command error:', error.message);
       await extra.reply('❌ Failed to create sticker. Make sure the media is valid.');
     } finally {
       // Always cleanup temp files

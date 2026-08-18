@@ -46,7 +46,7 @@ module.exports = {
             await extra.react('✅');
 
         } catch (error) {
-            console.error('image2url error:', error);
+            console.error('image2url error:', error.message);
             await extra.reply(`❌ ${error.message}`);
             await extra.react('❌');
         }

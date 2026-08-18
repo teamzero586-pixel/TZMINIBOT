@@ -143,7 +143,7 @@ module.exports = {
 
       await react('✅');
     } catch (error) {
-      console.error('YouTube plugin error:', error);
+      console.error('YouTube plugin error:', error.message);
       let errorMsg = '❌ Failed to download.';
       if (error.code === 'ECONNABORTED') errorMsg += ' Request timed out.';
       else errorMsg += ` ${error.message}`;

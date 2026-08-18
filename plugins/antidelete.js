@@ -40,7 +40,7 @@ cmd({
               `📩 Deleted messages will be sent to owner's inbox only.`);
         
     } catch (error) {
-        console.error("Antidelete command error:", error);
+        console.error("Antidelete command error:", error.message);
         reply("❌ Failed to update antidelete settings.");
     }
 });
@@ -73,7 +73,7 @@ cmd({
               `To change: .antidelete on/off`);
               
     } catch (error) {
-        console.error("Status check error:", error);
+        console.error("Status check error:", error.message);
         reply("❌ Failed to check status.");
     }
 });

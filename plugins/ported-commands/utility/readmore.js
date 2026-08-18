@@ -76,7 +76,7 @@ module.exports = {
       await react('✅');
 
     } catch (error) {
-      console.error('Readmore Error:', error);
+      console.error('Readmore Error:', error.message);
       await reply(`❌ Failed: ${error.message}`);
       await react('❌');
     }

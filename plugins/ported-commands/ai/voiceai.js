@@ -58,7 +58,7 @@ module.exports = {
       await extra.react('✅');
 
     } catch (error) {
-      console.error("[CMD VOICEAI] Error:", error);
+      console.error("[CMD VOICEAI] Error:", error.message);
       await extra.reply(`❌ Voice AI process karte waqt masla aa gaya. Dobara try karein.`);
     } finally {
       // Cleanup temporary files

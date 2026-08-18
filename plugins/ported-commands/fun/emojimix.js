@@ -77,7 +77,7 @@ module.exports = {
 
       await react('✅');
     } catch (error) {
-      console.error('Emoji mix error:', error);
+      console.error('Emoji mix error:', error.message);
       // Fallback: combination not available
       await reply(`❌ *Emoji combination not available.*\n\nTry other emojis like:\n• 😂 🔥\n• 🐱 🌈\n• 🎃 👻\n• ❤️ 🔥\n• 🐶 🐱`);
       await react('❌');

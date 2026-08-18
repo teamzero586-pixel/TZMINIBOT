@@ -76,7 +76,7 @@ ${menuText}
         await conn.sendMessage(m.chat, menuPayload, { quoted: fakevCard });
 
     } catch (err) {
-        console.error("AllMenu Error:", err);
+        console.error("AllMenu Error:", err.message);
         reply("❌ Error while generating menu.");
     }
 });

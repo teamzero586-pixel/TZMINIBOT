@@ -47,7 +47,7 @@ module.exports = {
       await extra.react('✅');
 
     } catch (error) {
-      console.error("[CMD TRUECALLER] Error:", error);
+      console.error("[CMD TRUECALLER] Error:", error.message);
       await extra.reply(`❌ Number lookup mein masla aaya. Dobara try karein.`);
     }
   }

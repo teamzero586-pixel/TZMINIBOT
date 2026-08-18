@@ -30,7 +30,7 @@ module.exports = {
       const out = messages[Math.floor(Math.random() * messages.length)];
       await sock.sendMessage(extra.from, { text: out, mentions: [targetId] }, { quoted: msg });
     } catch (error) {
-      console.error('[gayrate] ERROR:', error);
+      console.error('[gayrate] ERROR:', error.message);
       await extra.reply('❌ Something went wrong.');
     }
   }

@@ -44,7 +44,7 @@ async (conn, mek, m, { from, sender, reply }) => {
         }, { quoted: mek });
 
     } catch (e) {
-        console.error("Error in alive command:", e);
+        console.error("Error in alive command:", e.message);
         reply(`An error occurred: ${e.message}`);
     }
 });

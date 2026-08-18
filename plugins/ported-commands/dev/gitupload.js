@@ -301,7 +301,7 @@ module.exports = {
       await extra.reply(`✅ *Repository Successfully Updated!* 🎉\n\n🔗 *Repo:* ${owner}/${repo}\n🌿 *Branch:* ${defaultBranch}\n📁 *Uploaded Files:* ${validFiles.length}`);
 
     } catch (error) {
-      console.error('[CMD ERROR] GitUpload:', error);
+      console.error('[CMD ERROR] GitUpload:', error.message);
       if (extractPath && fs.existsSync(extractPath)) fs.rmSync(extractPath, { recursive: true, force: true });
       if (zipPath && fs.existsSync(zipPath)) fs.unlinkSync(zipPath);
 

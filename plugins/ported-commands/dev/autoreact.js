@@ -93,7 +93,7 @@ module.exports = {
           );
       }
     } catch (error) {
-      console.error('[autoreact]', error);
+      console.error('[autoreact]', error.message);
       await extra.reply(`❌ ${error.message}`);
     }
   }

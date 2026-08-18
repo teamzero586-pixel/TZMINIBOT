@@ -82,7 +82,7 @@ cmd({
 
   } catch (e) {
 
-    console.error("Ping Error:", e);
+    console.error("Ping Error:", e.message);
 
     await conn.sendMessage(from, {
       react: { text: "❌", key: m.key }

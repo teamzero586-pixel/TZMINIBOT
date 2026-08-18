@@ -55,7 +55,7 @@ async (conn, mek, m, { from, quoted, body, isCmd, command, args, q, isGroup, sen
         });
         return reply(text, { mentions: requests.map(u => u.jid) });
     } catch (error) {
-        console.error("Request list error:", error);
+        console.error("Request list error:", error.message);
         await conn.sendMessage(from, {
             react: { text: '❌', key: m.key }
         });
@@ -113,7 +113,7 @@ async (conn, mek, m, { from, quoted, body, isCmd, command, args, q, isGroup, sen
         });
         return reply(`✅ Successfully accepted ${requests.length} join requests.`);
     } catch (error) {
-        console.error("Accept all error:", error);
+        console.error("Accept all error:", error.message);
         await conn.sendMessage(from, {
             react: { text: '❌', key: m.key }
         });
@@ -171,7 +171,7 @@ async (conn, mek, m, { from, quoted, body, isCmd, command, args, q, isGroup, sen
         });
         return reply(`✅ Successfully rejected ${requests.length} join requests.`);
     } catch (error) {
-        console.error("Reject all error:", error);
+        console.error("Reject all error:", error.message);
         await conn.sendMessage(from, {
             react: { text: '❌', key: m.key }
         });
@@ -204,7 +204,7 @@ async (conn, mek, m, { from, isGroup, isAdmins, isBotAdmins, reply, mentionedJid
         }, { quoted: m });
 
     } catch (error) {
-        console.error("Kick error:", error);
+        console.error("Kick error:", error.message);
         reply("❌ Failed to remove member.");
     }
 });
@@ -281,13 +281,13 @@ async (conn, mek, m, {
                 await conn.groupParticipantsUpdate(from, [participant.id], "remove");
                 await sleep(2000);
             } catch (e) {
-                console.error(`Failed to remove ${participant.id}:`, e);
+                console.error(`Failed to remove ${participant.id}:`, e.message);
             }
         }
 
         reply("Successfully removed all admin members from the group.");
     } catch (e) {
-        console.error("Error removing admins:", e);
+        console.error("Error removing admins:", e.message);
         reply("An error occurred while trying to remove admins.");
     }
 });
@@ -348,7 +348,7 @@ try {
     }
 
 } catch (err) {
-    console.error("Promote Error:", err);
+    console.error("Promote Error:", err.message);
     reply("❌ Failed to promote user: " + err.message);
 }
 });
@@ -409,7 +409,7 @@ try {
     }
 
 } catch (err) {
-    console.error("Demote Error:", err);
+    console.error("Demote Error:", err.message);
     reply("❌ Failed to demote user: " + err.message);
 }
 });
@@ -456,7 +456,7 @@ try {
     }
 
 } catch (err) {
-    console.error("Bot Admin Error:", err);
+    console.error("Bot Admin Error:", err.message);
     reply("❌ Error in botadmin: " + err.message);
 }
 });
@@ -535,7 +535,7 @@ try {
     }
 
 } catch (err) {
-    console.error("Add Error:", err);
+    console.error("Add Error:", err.message);
     reply("❌ Failed to add user: " + (err.message || "Check the numbers and try again"));
 }
 });
@@ -578,7 +578,7 @@ try {
     }, { quoted: fakevCard });
 
 } catch (err) {
-    console.error("TagAll Error:", err);
+    console.error("TagAll Error:", err.message);
     reply("❌ Error in tagall: " + err.message);
 }
 });
@@ -665,7 +665,7 @@ async (conn, mek, m, {
             return await conn.sendMessage(from, content, { quoted: fakevCard });
           }
         } catch (e) {
-          console.error("Media download/send error:", e);
+          console.error("Media download/send error:", e.message);
           return reply("❌ Failed to process the media.");
         }
       }
@@ -742,7 +742,7 @@ try {
     }, { quoted: mek });
 
 } catch (err) {
-    console.error("Admin Check Error:", err);
+    console.error("Admin Check Error:", err.message);
     reply("❌ Error in admin check: " + err.message);
 }
 });
@@ -778,7 +778,7 @@ async (conn, mek, m, {
         await conn.groupParticipantsUpdate(from, jids, "remove");
         reply(`✅ Removed ${jids.length} members from the group.`);
     } catch (error) {
-        console.error("End command error:", error);
+        console.error("End command error:", error.message);
         reply("❌ Failed to remove members. Error: " + error.message);
     }
 });

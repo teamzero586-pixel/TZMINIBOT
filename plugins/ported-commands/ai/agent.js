@@ -53,7 +53,7 @@ Provide your response in this format:
       await extra.react('✅');
 
     } catch (error) {
-      console.error("[CMD AGENT] Error:", error);
+      console.error("[CMD AGENT] Error:", error.message);
       await extra.reply(`❌ AI Agent execution mein timeout ya masla aa gaya. Dobara try karein.`);
     }
   }

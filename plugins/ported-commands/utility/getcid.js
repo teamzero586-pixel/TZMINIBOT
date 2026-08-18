@@ -52,7 +52,7 @@ module.exports = {
       await reply(resultText);
       await react('✅');
     } catch (error) {
-      console.error('Get channel ID error:', error);
+      console.error('Get channel ID error:', error.message);
       await reply(`❌ Failed to get channel ID: ${error.message}`);
       await react('❌');
     }

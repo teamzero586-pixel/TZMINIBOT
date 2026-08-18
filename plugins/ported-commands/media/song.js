@@ -261,7 +261,7 @@ module.exports = {
       }
       
     } catch (err) {
-      console.error('Song command error:', err);
+      console.error('Song command error:', err.message);
       
       // Provide more specific error messages
       let errorMessage = '❌ Failed to download song.';

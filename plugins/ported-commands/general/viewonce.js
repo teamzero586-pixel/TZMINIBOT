@@ -139,7 +139,7 @@ module.exports = {
         );
       }
     } catch (error) {
-      console.error('Error in viewonce command:', error);
+      console.error('Error in viewonce command:', error.message);
       await sock.sendMessage(
         msg.key.remoteJid,
         {

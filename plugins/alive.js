@@ -78,7 +78,7 @@ cmd({
         await conn.sendMessage(from, msgPayload, { quoted: fakevCard });
 
     } catch (error) {
-        console.error("Error in alive command: ", error);
+        console.error("Error in alive command: ", error.message);
         
         // Respond with error details 
         const errorMessage = `

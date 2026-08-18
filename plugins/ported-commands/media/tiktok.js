@@ -110,7 +110,7 @@ module.exports = {
       await extra.react('✅');
 
     } catch (error) {
-      console.error("[CMD TIKTOK] Error:", error);
+      console.error("[CMD TIKTOK] Error:", error.message);
       await extra.reply(`❌ Video download karte waqt masla aa gaya. Dobara try karein.`);
     } finally {
       // Memory / Storage free karne ke liye temporary file ko hamesha delete karein

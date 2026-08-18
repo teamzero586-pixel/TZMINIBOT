@@ -101,7 +101,7 @@ module.exports = {
       await extra.react('✅');
 
     } catch (error) {
-      console.error("[CMD GITCLONE] Error:", error);
+      console.error("[CMD GITCLONE] Error:", error.message);
       await extra.reply(`❌ Git clone karte waqt error aa gaya. Link dobara check karein.`);
     }
   }

@@ -48,7 +48,7 @@ module.exports = {
             }, { quoted: msg });
 
         } catch (error) {
-            console.error("Translate Command Error: ", error);
+            console.error("Translate Command Error: ", error.message);
             await client.sendMessage(msg.from, { 
                 text: '⚠️ Error aa gaya! Shayad translation server busy hai.' 
             }, { quoted: msg });

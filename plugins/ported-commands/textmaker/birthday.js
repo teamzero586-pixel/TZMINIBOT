@@ -136,7 +136,7 @@ module.exports = {
       try { await sock.sendMessage(from, { delete: statusKey }); } catch {}
       await react('✅');
     } catch (error) {
-      console.error('Birthday command error:', error);
+      console.error('Birthday command error:', error.message);
       await reply(`❌ Failed to generate birthday image: ${error.message}`);
       await react('❌');
     }

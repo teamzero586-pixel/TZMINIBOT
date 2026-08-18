@@ -35,7 +35,7 @@ module.exports = {
       }, { quoted: msg });
       
     } catch (error) {
-      console.error('Error in arena command:', error);
+      console.error('Error in arena command:', error.message);
       await sock.sendMessage(msg.key.remoteJid, { 
         text: `Error: ${error.message}` 
       }, { quoted: msg });

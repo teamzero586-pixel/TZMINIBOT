@@ -34,7 +34,7 @@ module.exports = {
       await extra.react('✅');
 
     } catch (error) {
-      console.error("[CMD AIVIDEO] Error:", error);
+      console.error("[CMD AIVIDEO] Error:", error.message);
       await extra.reply(`❌ Prompts generate karne mein masla aaya. Thori der baad try karein.`);
     }
   }

@@ -30,7 +30,7 @@ module.exports = {
       await sock.sendMessage(extra.from, { delete: deleteKey });
       
     } catch (error) {
-      console.error('Delete command error:', error);
+      console.error('Delete command error:', error.message);
       await extra.reply('❌ Failed to delete message.');
     }
   }

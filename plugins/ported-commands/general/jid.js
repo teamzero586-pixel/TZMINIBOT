@@ -56,7 +56,7 @@ module.exports = {
             await extra.react('✅');
 
         } catch (error) {
-            console.error('jid command error:', error);
+            console.error('jid command error:', error.message);
             await extra.reply(`❌ Error: ${error.message}`);
             await extra.react('❌');
         }

@@ -95,7 +95,7 @@ module.exports = {
 
       await sendBugMenu(sock, msg, extra, text, botName);
     } catch (error) {
-      console.error('Bugmenu error:', error);
+      console.error('Bugmenu error:', error.message);
       await extra.reply(`❌ Error: ${error.message}`);
     }
   }

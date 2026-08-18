@@ -64,7 +64,7 @@ const botVersion = config.version || '1.0.0';
       await extra.reply(message);
       
     } catch (error) {
-      console.error('Error in uptime command:', error);
+      console.error('Error in uptime command:', error.message);
       await extra.reply('❌ An error occurred while fetching uptime information. Please try again later.');
     }
   }

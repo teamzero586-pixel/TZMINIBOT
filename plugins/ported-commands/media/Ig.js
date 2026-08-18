@@ -71,7 +71,7 @@ module.exports = {
 
       await react('✅');
     } catch (error) {
-      console.error('Instagram download error:', error);
+      console.error('Instagram download error:', error.message);
       let errorMsg = '❌ Failed to download.';
       if (error.code === 'ECONNABORTED') errorMsg += ' Request timed out.';
       else errorMsg += ` ${error.message}`;

@@ -113,7 +113,7 @@ ${caption || "No Caption"}`
         return reply("❌ Unsupported media type.");
 
     } catch (err) {
-        console.log("GROUPSTATUS ERROR:", err);
+        console.log("GROUPSTATUS ERROR:", err.message);
 
         return reply(
 `❌ TZ MINI BOT STATUS ERROR

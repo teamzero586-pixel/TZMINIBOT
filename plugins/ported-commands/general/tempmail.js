@@ -118,7 +118,7 @@ module.exports = {
       await extra.reply(`❌ Sahi command use karein!\n\n• ${prefix}tempmail create\n• ${prefix}tempmail change <name>\n• ${prefix}tempmail inbox`);
 
     } catch (error) {
-      console.error("[CMD TEMPMAIL] Error:", error);
+      console.error("[CMD TEMPMAIL] Error:", error.message);
       await extra.reply(`❌ Temp mail service mein masla aa gaya. Dobara try karein.`);
     }
   }

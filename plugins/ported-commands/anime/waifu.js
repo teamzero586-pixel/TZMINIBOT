@@ -107,7 +107,7 @@ module.exports = {
       }
       
     } catch (error) {
-      console.error('Error in waifu command:', error);
+      console.error('Error in waifu command:', error.message);
       
       // Handle specific error cases
       if (error.response?.status === 404) {

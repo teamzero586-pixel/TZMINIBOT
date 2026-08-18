@@ -79,7 +79,7 @@ module.exports = {
       }, { quoted: msg });
 
     } catch (error) {
-      console.error('Video command error:', error);
+      console.error('Video command error:', error.message);
       await sock.sendMessage(chatId, { text: `❌ Error: ${error.message}` }, { quoted: msg });
     }
   }

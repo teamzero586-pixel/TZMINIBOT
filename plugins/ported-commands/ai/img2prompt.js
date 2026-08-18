@@ -54,7 +54,7 @@ module.exports = {
             await extra.react('✅');
 
         } catch (error) {
-            console.error('img2prompt error:', error);
+            console.error('img2prompt error:', error.message);
             await extra.reply(`❌ ${error.message}`);
             await extra.react('❌');
         }

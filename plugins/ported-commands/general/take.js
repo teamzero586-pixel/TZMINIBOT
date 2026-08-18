@@ -74,7 +74,7 @@ module.exports = {
       await sock.sendMessage(extra.from, { sticker: finalBuffer }, { quoted: msg });
       
     } catch (error) {
-      console.error('Take command error:', error);
+      console.error('Take command error:', error.message);
       await extra.reply('❌ Failed to steal sticker. Please try again.');
     }
   },

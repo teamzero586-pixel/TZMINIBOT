@@ -144,7 +144,7 @@ module.exports = {
       });
       await react('✅');
     } catch (error) {
-      console.error('Define command error:', error);
+      console.error('Define command error:', error.message);
       await reply(`❌ Unexpected error: ${error.message}`);
       await react('❌');
     }

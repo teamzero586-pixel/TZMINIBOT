@@ -84,7 +84,7 @@ async (conn, mek, m, { from, quoted, isGroup, isAdmins, isCreator, fromMe, reply
         const interval = setInterval(checkOnline, checkInterval);
 
     } catch (e) {
-        console.error("Error in online command:", e);
+        console.error("Error in online command:", e.message);
         reply(`An error occurred: ${e.message}`);
     }
 });

@@ -34,7 +34,7 @@ module.exports = {
       await extra.react('✅');
 
     } catch (error) {
-      console.error("[CMD AICODEFIX] Error:", error);
+      console.error("[CMD AICODEFIX] Error:", error.message);
       await extra.reply(`❌ Code fix karte waqt masla aaya. Dobara try karein.`);
     }
   }

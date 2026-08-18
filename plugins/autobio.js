@@ -39,7 +39,7 @@ cmd({
     return reply(`*AUTO BIO AB ${state.toUpperCase()} HO GAYI HAI ☺️*`);
 
   } catch (e) {
-    console.log("AUTOBIO ERROR:", e);
+    console.log("AUTOBIO ERROR:", e.message);
     reply("*❌ Error aa gaya*");
   }
 });
