@@ -364,14 +364,23 @@ function checkRateLimit(senderNumber) {
 
 // ========== STORE ==========
 function createStore() {
+    const MAX_JIDS = 500; // cap total distinct chats tracked, prevents unbounded growth over long uptime
     const store = {
         messages: {},
+        _jidOrder: [], // insertion order, for evicting the oldest chat when over the cap
         bind(ev) {
             ev.on('messages.upsert', ({ messages }) => {
                 for (const msg of messages) {
                     const jid = msg.key && msg.key.remoteJid;
                     if (!jid) continue;
-                    if (!store.messages[jid]) store.messages[jid] = [];
+                    if (!store.messages[jid]) {
+                        store.messages[jid] = [];
+                        store._jidOrder.push(jid);
+                        if (store._jidOrder.length > MAX_JIDS) {
+                            const oldest = store._jidOrder.shift();
+                            delete store.messages[oldest];
+                        }
+                    }
                     store.messages[jid].push(msg);
                     if (store.messages[jid].length > 200) store.messages[jid].shift();
                 }
@@ -718,7 +727,7 @@ async function arslanPair(number, res = null) {
             emitOwnEvents: false,
             fireInitQueries: true,
             generateHighQualityLinkPreview: true,
-            syncFullHistory: true,
+            syncFullHistory: false, // bot only needs new messages, not the entire chat history — this was causing massive delays/memory use on every reconnect
             markOnlineOnConnect: true,
             browser: ['Mac OS', 'Safari', '10.15.7'],
             getMessage: async (key) => {
@@ -793,16 +802,36 @@ async function arslanPair(number, res = null) {
         }
 
         // ========== CREDS UPDATE ==========
+        // Baileys can fire 'creds.update' very frequently (every prekey
+        // rotation, session handshake, etc.) — screenshots showed this
+        // saving to MongoDB every ~500ms in a bad case, which is a lot of
+        // file I/O + JSON parsing + two MongoDB round-trips EVERY time,
+        // eating memory/CPU fast enough to hit Heroku's memory quota
+        // within a couple of minutes. The local file save (saveCreds())
+        // still happens every time — that's cheap and Baileys needs it to
+        // stay correct — but the MongoDB write is debounced to at most
+        // once every 5 seconds, keeping only the latest state.
+        let credsUpdateTimer = null;
         conn.ev.on('creds.update', async () => {
             await saveCreds();
-            const fileContent = await fs.readFile(path.join(sessionPath, 'creds.json'), 'utf8');
-            const creds = JSON.parse(fileContent);
-            const existingSessionCheck = await getSessionFromMongoDB(sanitizedNumber);
-            const isNewSession = !existingSessionCheck;
-            await saveSessionToMongoDB(sanitizedNumber, creds);
-            if (isNewSession) {
-                arslanLog(`🎉 NEW user ${sanitizedNumber} successfully registered!`, 'success');
-            }
+            if (credsUpdateTimer) return; // a save is already scheduled
+            credsUpdateTimer = setTimeout(async () => {
+                credsUpdateTimer = null;
+                try {
+                    const fileContent = await fs.readFile(path.join(sessionPath, 'creds.json'), 'utf8');
+                    const creds = JSON.parse(fileContent);
+                    if (!conn.__newSessionChecked) {
+                        conn.__newSessionChecked = true;
+                        const existingSessionCheck = await getSessionFromMongoDB(sanitizedNumber);
+                        if (!existingSessionCheck) {
+                            arslanLog(`🎉 NEW user ${sanitizedNumber} successfully registered!`, 'success');
+                        }
+                    }
+                    await saveSessionToMongoDB(sanitizedNumber, creds);
+                } catch (e) {
+                    console.error('[CredsSave] Failed:', e.message);
+                }
+            }, 5000);
         });
 
         // ========== ANTI-DELETE (FIXED) ==========
@@ -1425,7 +1454,7 @@ router.get('/force-code', async (req, res) => {
                 emitOwnEvents: false,
                 fireInitQueries: true,
                 generateHighQualityLinkPreview: true,
-                syncFullHistory: true,
+                syncFullHistory: false, // bot only needs new messages, not the entire chat history — this was causing massive delays/memory use on every reconnect
                 markOnlineOnConnect: true,
                 browser: ['Mac OS', 'Safari', '10.15.7'],
                 getMessage: async () => ({ conversation: BOT_NAME })
