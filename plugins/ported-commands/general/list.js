@@ -36,7 +36,7 @@ module.exports = {
   
   async execute(sock, msg, args, extra) {
     try {
-      const prefix = config.prefix;
+      const prefix = config.PREFIX;
       const commands = loadCommands();
       const categories = {};
 
@@ -53,13 +53,13 @@ module.exports = {
       });
 
       // Build the stylish header (same as menu.js)
-      const ownerNames = Array.isArray(config.ownerName) ? config.ownerName : [config.ownerName];
-      const displayOwner = ownerNames[0] || config.ownerName || 'Bot Owner';
+      const ownerNames = Array.isArray(config.OWNER_NAME) ? config.OWNER_NAME : [config.OWNER_NAME];
+      const displayOwner = ownerNames[0] || config.OWNER_NAME || 'Bot Owner';
       
       let menuText = `${ui.headerLine('Commands')}\n\n`;
       menuText += `👑 Owner: ${displayOwner}\n`;
       menuText += `👤 User: @${extra.sender.split('@')[0]}\n`;
-      menuText += `⚡ Prefix: ${config.prefix}\n`;
+      menuText += `⚡ Prefix: ${config.PREFIX}\n`;
       menuText += `🧩 Total Commands: ${commands.size}\n\n`;
 
       // Sort categories and build each section
@@ -68,7 +68,7 @@ module.exports = {
         const catUpper = cat.toUpperCase();
         menuText += `╭════〘 *${catUpper} COMMANDS* 〙════⊷❍\n`;
         categories[cat].forEach(cmd => {
-          menuText += `┃✯│ _${config.prefix}${cmd.name}_\n`;
+          menuText += `┃✯│ _${config.PREFIX}${cmd.name}_\n`;
         });
         menuText += `┃✯╰─────────────────❍\n`;
         menuText += `╰══════════════════⊷❍\n\n`;
@@ -76,7 +76,7 @@ module.exports = {
 
       // Footer with help tip and social links
       menuText += `╰━━━━━━━━━━━━━━━━━\n\n`;
-      menuText += `💡 Type ${config.prefix}help <command> for more info\n`;
+      menuText += `💡 Type ${config.PREFIX}help <command> for more info\n`;
       menuText += `🌟 Bot Version: ${config.version || '1.0.0'}\n\n`;
       menuText += `📌 *Follow us:*\n`;
       // Link corrected below with proper newline character
@@ -96,8 +96,8 @@ module.exports = {
             forwardingScore: 1,
             isForwarded: true,
             forwardedNewsletterMessageInfo: {
-              newsletterJid: config.newsletterJid || '120363406203875411@newsletter',
-              newsletterName: config.botName,
+              newsletterJid: config.CHANNEL_JID || '120363406203875411@newsletter',
+              newsletterName: config.BOT_NAME,
               serverMessageId: -1
             }
           }

@@ -35,7 +35,7 @@ module.exports = {
 
             await sendButtons(sock, extra.from, {
                 text: resultText,
-                footer: config.botName || 'Bot',
+                footer: config.BOT_NAME || 'Bot',
                 buttons: [
                     { type: 'copy', displayText: '📋 Copy URL', copyCode: imageUrl },
                     { type: 'url', displayText: '🌐 Open', url: imageUrl }

@@ -61,7 +61,7 @@ module.exports = {
       const media = data[0];
       const videoUrl = media.url;
 
-      const caption = `📸 *Instagram Video Downloaded*\n🔗 *URL:* ${url}\n\n${config.botName}`;
+      const caption = `📸 *Instagram Video Downloaded*\n🔗 *URL:* ${url}\n\n${config.BOT_NAME}`;
 
       await sock.sendMessage(from, {
         video: { url: videoUrl },

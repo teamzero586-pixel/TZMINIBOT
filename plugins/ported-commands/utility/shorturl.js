@@ -110,7 +110,7 @@ module.exports = {
 📎 *Original:* ${longUrl}
 ✨ *Shortened:* ${shortUrl}
 
-_Powered by ${config.botName}_`;
+_Powered by ${config.BOT_NAME}_`;
 
       await sock.sendMessage(from, {
         text: resultText,

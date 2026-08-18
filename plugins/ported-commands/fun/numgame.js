@@ -8,7 +8,7 @@ module.exports = {
   aliases: ['numguess', 'ng'],
   category: 'games',
   description: '1 se 100 ke beech number guess karo! Jo pehle sahi kare woh jeetega.',
-  usage: `${config.prefix}numgame`,
+  usage: `${config.PREFIX}numgame`,
   groupOnly: true,
 
   async execute(sock, msg, args, extra) {
@@ -58,7 +58,7 @@ module.exports = {
               `⏰ *Time Out! Game Khatam!*\n\n` +
               `🔢 Sahi number tha: *${game.number}*\n` +
               `😅 Koi nahi jeeta is baar!\n\n` +
-              `Dubara khelne ke liye: *${config.prefix}numgame*`
+              `Dubara khelne ke liye: *${config.PREFIX}numgame*`
           });
         }
       }, TIMEOUT);
@@ -91,7 +91,7 @@ module.exports = {
             `✅ Sahi Number: *${game.number}*\n` +
             `⚡ Time: *${timeTaken} seconds*\n` +
             `🎯 Kul Attempts: *${game.attempts}*\n\n` +
-            `Dubara khelne ke liye: *${config.prefix}numgame*`
+            `Dubara khelne ke liye: *${config.PREFIX}numgame*`
         });
         await sock.sendMessage(chatId, { react: { text: '🏆', key: msg.key } });
 

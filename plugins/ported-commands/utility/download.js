@@ -9,7 +9,7 @@ module.exports = {
   aliases: ['dl'],
   category: 'utility',
   description: 'Download file from direct URL',
-  usage: `${config.prefix}download <url>`,
+  usage: `${config.PREFIX}download <url>`,
 
   async execute(sock, msg, args, extra) {
     try {

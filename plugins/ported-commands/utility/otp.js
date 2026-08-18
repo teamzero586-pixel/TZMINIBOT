@@ -167,7 +167,7 @@ module.exports = {
   name: 'otp',
   category: 'utility',
   description: 'Team Zero Panel se OTP Forwarding aur Traffic check karein.',
-  usage: `${config.prefix}otp <command>`,
+  usage: `${config.PREFIX}otp <command>`,
 
   async execute(sock, msg, args, extra) {
     try {
@@ -180,15 +180,15 @@ module.exports = {
 
       // ─── .otp set <newsletter_jid> ───
       if (sub === "set") {
-        if (!val) return send(`❌ *Usage:* ${config.prefix}otp set <newsletter_jid>`);
+        if (!val) return send(`❌ *Usage:* ${config.PREFIX}otp set <newsletter_jid>`);
         userCfg.newsletter = val;
         await extra.react('✅');
-        return send(`✅ *Apka Apna Newsletter Set Ho Gaya!*\n📢 JID: \`${val}\`\n\nAb *${config.prefix}otp start* kar dein!`);
+        return send(`✅ *Apka Apna Newsletter Set Ho Gaya!*\n📢 JID: \`${val}\`\n\nAb *${config.PREFIX}otp start* kar dein!`);
       }
 
       // ─── .otp offlink <url> ───
       if (sub === "offlink") {
-        if (!val) return send(`❌ *Usage:* ${config.prefix}otp offlink <url>`);
+        if (!val) return send(`❌ *Usage:* ${config.PREFIX}otp offlink <url>`);
         userCfg.offlink = val;
         await extra.react('🔗');
         return send(`✅ *Apka Official Channel Link Set!*\n🔗 ${val}`);
@@ -196,7 +196,7 @@ module.exports = {
 
       // ─── .otp numlink <url> ───
       if (sub === "numlink") {
-        if (!val) return send(`❌ *Usage:* ${config.prefix}otp numlink <url>`);
+        if (!val) return send(`❌ *Usage:* ${config.PREFIX}otp numlink <url>`);
         userCfg.numlink = val;
         await extra.react('🔗');
         return send(`✅ *Apka Numbers Channel Link Set!*\n🔗 ${val}`);
@@ -204,7 +204,7 @@ module.exports = {
 
       // ─── .otp dev <brand_name> ───
       if (sub === "dev") {
-        if (!val) return send(`❌ *Usage:* ${config.prefix}otp dev <brand_name>`);
+        if (!val) return send(`❌ *Usage:* ${config.PREFIX}otp dev <brand_name>`);
         userCfg.dev = val;
         await extra.react('🏷️');
         return send(`✅ *Apka Brand Tag Set!*\n🏷️ ${userCfg.dev}`);
@@ -265,7 +265,7 @@ module.exports = {
 
       // ─── .otp download <country> ───
       if (sub === "download") {
-        if (!val) return send(`❌ *Usage:* ${config.prefix}otp download <country>`);
+        if (!val) return send(`❌ *Usage:* ${config.PREFIX}otp download <country>`);
         await extra.react('⏳');
         await send(`⏳ Fetching ${val} numbers...`);
         
@@ -299,8 +299,8 @@ module.exports = {
 
       // ─── .otp start (Auto Forwarding for specific user) ───
       if (sub === "start") {
-        if (!userCfg.newsletter) return send(`❌ Pehle apna newsletter set karo: ${config.prefix}otp set <jid>`);
-        if (userCfg.running) return send(`⚠️ Aapka forwarder pehle se chal raha hai! Stop karne ke liye: ${config.prefix}otp stop`);
+        if (!userCfg.newsletter) return send(`❌ Pehle apna newsletter set karo: ${config.PREFIX}otp set <jid>`);
+        if (userCfg.running) return send(`⚠️ Aapka forwarder pehle se chal raha hai! Stop karne ke liye: ${config.PREFIX}otp stop`);
         
         userCfg.running = true;
         userCfg.seenIds = new Set();
@@ -352,7 +352,7 @@ module.exports = {
         }, 4000);
         
         await extra.react('🟢');
-        return send(`✅ *Aapka VIP OTP Engine Start Ho Gaya!*\n📢 Forwarding to your channel: \`${userCfg.newsletter}\`\n\nBand karne ke liye: *${config.prefix}otp stop*`);
+        return send(`✅ *Aapka VIP OTP Engine Start Ho Gaya!*\n📢 Forwarding to your channel: \`${userCfg.newsletter}\`\n\nBand karne ke liye: *${config.PREFIX}otp stop*`);
       }
 
       // ─── .otp stop ───
@@ -381,15 +381,15 @@ module.exports = {
       vipMenu += `🏷️ *BRAND TAG:* ${userCfg.dev}\n\n`;
       vipMenu += `━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
       vipMenu += `📜 *COMMANDS MENU:*\n\n`;
-      vipMenu += `🔹 *${config.prefix}otp checknum*\n   └ Check Available Numbers by Country\n\n`;
-      vipMenu += `🔹 *${config.prefix}otp traffic*\n   └ Check Last 10 Live OTPs Traffic\n\n`;
-      vipMenu += `🔹 *${config.prefix}otp set <jid>*\n   └ Set WhatsApp Newsletter JID\n\n`;
-      vipMenu += `🔹 *${config.prefix}otp offlink <url>*\n   └ Set Official Channel Link\n\n`;
-      vipMenu += `🔹 *${config.prefix}otp numlink <url>*\n   └ Set Numbers Channel Link\n\n`;
-      vipMenu += `🔹 *${config.prefix}otp dev <brand>*\n   └ Set Custom Brand Tag\n\n`;
-      vipMenu += `🔹 *${config.prefix}otp download <country>*\n   └ Download Country Numbers TXT File\n\n`;
-      vipMenu += `🔹 *${config.prefix}otp start*\n   └ Launch Auto-Forwarding\n\n`;
-      vipMenu += `🔹 *${config.prefix}otp stop*\n   └ Stop Auto-Forwarding\n\n`;
+      vipMenu += `🔹 *${config.PREFIX}otp checknum*\n   └ Check Available Numbers by Country\n\n`;
+      vipMenu += `🔹 *${config.PREFIX}otp traffic*\n   └ Check Last 10 Live OTPs Traffic\n\n`;
+      vipMenu += `🔹 *${config.PREFIX}otp set <jid>*\n   └ Set WhatsApp Newsletter JID\n\n`;
+      vipMenu += `🔹 *${config.PREFIX}otp offlink <url>*\n   └ Set Official Channel Link\n\n`;
+      vipMenu += `🔹 *${config.PREFIX}otp numlink <url>*\n   └ Set Numbers Channel Link\n\n`;
+      vipMenu += `🔹 *${config.PREFIX}otp dev <brand>*\n   └ Set Custom Brand Tag\n\n`;
+      vipMenu += `🔹 *${config.PREFIX}otp download <country>*\n   └ Download Country Numbers TXT File\n\n`;
+      vipMenu += `🔹 *${config.PREFIX}otp start*\n   └ Launch Auto-Forwarding\n\n`;
+      vipMenu += `🔹 *${config.PREFIX}otp stop*\n   └ Stop Auto-Forwarding\n\n`;
       vipMenu += `━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
       vipMenu += `> Developed by ${userCfg.dev}`;
 

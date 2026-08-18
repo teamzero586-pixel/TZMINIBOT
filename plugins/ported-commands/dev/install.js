@@ -9,7 +9,7 @@ const ui = require('../../utils/ui');
 
 const INSTALLED_LOG = path.join(__dirname, '../../database/installed_plugins.json');
 
-const getPrimaryOwner = () => String((config.ownerNumber && config.ownerNumber[0]) || '').replace(/[^0-9]/g, '');
+const getPrimaryOwner = () => String((config.OWNER_NUMBER && config.OWNER_NUMBER[0]) || '').replace(/[^0-9]/g, '');
 
 const validCategories = [
   'admin', 'ai', 'anime', 'fun', 'general',
@@ -186,9 +186,9 @@ module.exports = {
         '✅ Plugin installed successfully!',
         `📁 Category: ${pluginInfo.category}`,
         `📄 File: ${pluginInfo.name}.js`,
-        `🔖 Command: ${config.prefix || '.'}${pluginInfo.name}`
+        `🔖 Command: ${config.PREFIX || '.'}${pluginInfo.name}`
       ];
-      if (pluginInfo.aliases?.length) details.push(`🔁 Aliases: ${pluginInfo.aliases.map(a => `${config.prefix || '.'}${a}`).join(', ')}`);
+      if (pluginInfo.aliases?.length) details.push(`🔁 Aliases: ${pluginInfo.aliases.map(a => `${config.PREFIX || '.'}${a}`).join(', ')}`);
       if (pluginInfo.description) details.push(`📝 ${pluginInfo.description}`);
       if (pluginInfo.usage) details.push(`⚙️ Usage: ${pluginInfo.usage}`);
 

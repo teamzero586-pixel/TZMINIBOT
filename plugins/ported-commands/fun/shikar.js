@@ -54,7 +54,7 @@ module.exports = {
   aliases: ['roast', 'target', 'hunt'],
   category: 'owner',
   description: 'Kisi ko bhi roast karo, tarif karo ya saza do! Sirf Owner ke liye.',
-  usage: `${config.prefix}shikar @mention [roast/praise/punish]`,
+  usage: `${config.PREFIX}shikar @mention [roast/praise/punish]`,
   ownerOnly: true,
 
   async execute(sock, msg, args, extra) {
@@ -70,10 +70,10 @@ module.exports = {
         return extra.reply(
           `❌ *Kisi ko tag karo!*\n\n` +
           `📝 *Usage:*\n` +
-          `• *${config.prefix}shikar @member roast* — Roast karo 😂\n` +
-          `• *${config.prefix}shikar @member praise* — Tarif karo 👑\n` +
-          `• *${config.prefix}shikar @member punish* — Saza do 😈\n` +
-          `• *${config.prefix}shikar @member* — Random!`
+          `• *${config.PREFIX}shikar @member roast* — Roast karo 😂\n` +
+          `• *${config.PREFIX}shikar @member praise* — Tarif karo 👑\n` +
+          `• *${config.PREFIX}shikar @member punish* — Saza do 😈\n` +
+          `• *${config.PREFIX}shikar @member* — Random!`
         );
       }
 

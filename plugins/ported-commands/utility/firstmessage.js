@@ -34,7 +34,7 @@ function saveGreeted(db, sender, greeted) {
  * Preserves newlines and any formatting.
  */
 function getRawText(cmdName, body) {
-  const prefix = config.prefix;
+  const prefix = config.PREFIX;
   // Find the first occurrence of the prefix
   const prefixIdx = body.indexOf(prefix);
   if (prefixIdx === -1) return '';
@@ -66,7 +66,7 @@ module.exports = {
   aliases: ['firstmsg', 'greet', 'welcomemsg'],
   category: 'utility',
   description: 'Send a customizable auto‑reply to first‑time private messages (newline friendly)',
-  usage: `${config.prefix}firstmessage <on|off|set|status|reset>`,
+  usage: `${config.PREFIX}firstmessage <on|off|set|status|reset>`,
   ownerOnly: true,
 
   // ▸ handleMessage – called for EVERY incoming message
@@ -83,8 +83,8 @@ module.exports = {
 
       pendingGreets.add(extra.sender);
       try {
-        const botName = config.botName || 'ProBoy-MD';
-        const newsletterJid = config.newsletterJid || '120363161513685998@newsletter';
+        const botName = config.BOT_NAME || 'ProBoy-MD';
+        const newsletterJid = config.CHANNEL_JID || '120363161513685998@newsletter';
         const caption = message || `👋 Hello! Welcome to ${botName}.`;
 
         const contextInfo = {

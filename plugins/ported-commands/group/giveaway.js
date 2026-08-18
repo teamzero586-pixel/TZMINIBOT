@@ -7,7 +7,7 @@ module.exports = {
   aliases: ['gw', 'contest'],
   category: 'games',
   description: 'Giveaway shuru karo — members join karein, bot winner nikale!',
-  usage: `${config.prefix}giveaway [start/end/cancel] [prize] [keyword] [minutes]`,
+  usage: `${config.PREFIX}giveaway [start/end/cancel] [prize] [keyword] [minutes]`,
   ownerOnly: true,
 
   async execute(sock, msg, args, extra) {
@@ -21,9 +21,9 @@ module.exports = {
           return extra.reply(
             `ℹ️ *Koi giveaway chal nahi raha!*\n\n` +
             `📝 Shuru karne ke liye:\n` +
-            `*${config.prefix}giveaway start [prize] [keyword] [minutes]*\n\n` +
+            `*${config.PREFIX}giveaway start [prize] [keyword] [minutes]*\n\n` +
             `📌 *Example:*\n` +
-            `*${config.prefix}giveaway start "100 Rs Easypaisa" JOIN 5*`
+            `*${config.PREFIX}giveaway start "100 Rs Easypaisa" JOIN 5*`
           );
         }
         const gw = activeGiveaways.get(chatId);
@@ -61,7 +61,7 @@ module.exports = {
       // START
       if (sub === 'start') {
         if (activeGiveaways.has(chatId)) {
-          return extra.reply('⚠️ Pehle se ek giveaway chal raha hai!\nPehle *' + config.prefix + 'giveaway end* ya *cancel* karo!');
+          return extra.reply('⚠️ Pehle se ek giveaway chal raha hai!\nPehle *' + config.PREFIX + 'giveaway end* ya *cancel* karo!');
         }
 
         const prize = args[1] || 'Surprise Gift 🎁';
@@ -112,11 +112,11 @@ module.exports = {
       await extra.reply(
         `*🎁 GIVEAWAY COMMANDS*\n` +
         `━━━━━━━━━━━━━━━━━━━━\n\n` +
-        `▶️ *Start:*\n${config.prefix}giveaway start [prize] [keyword] [minutes]\n\n` +
-        `📊 *Status:*\n${config.prefix}giveaway status\n\n` +
-        `🏆 *End Now:*\n${config.prefix}giveaway end\n\n` +
-        `❌ *Cancel:*\n${config.prefix}giveaway cancel\n\n` +
-        `📌 *Example:*\n${config.prefix}giveaway start "100 Rs Easypaisa" JOIN 10`
+        `▶️ *Start:*\n${config.PREFIX}giveaway start [prize] [keyword] [minutes]\n\n` +
+        `📊 *Status:*\n${config.PREFIX}giveaway status\n\n` +
+        `🏆 *End Now:*\n${config.PREFIX}giveaway end\n\n` +
+        `❌ *Cancel:*\n${config.PREFIX}giveaway cancel\n\n` +
+        `📌 *Example:*\n${config.PREFIX}giveaway start "100 Rs Easypaisa" JOIN 10`
       );
 
     } catch (error) {

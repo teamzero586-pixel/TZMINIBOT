@@ -51,7 +51,7 @@ module.exports = {
       const uptime = formatUptime(uptimeSeconds);
       
 // Get bot info
-const botName = config.botName || 'Bot';
+const botName = config.BOT_NAME || 'Bot';
 const botVersion = config.version || '1.0.0';
       
       // Build response message

@@ -20,7 +20,7 @@ const buildHeader = ({ total, owner, userTag, botName }) => {
   let text = `╭━  ${botName}  ━╮\n`;
   text += `┃  Owner: ${owner}\n`;
   text += `┃  User: @${userTag}\n`;
-  text += `┃  Prefix: ${config.prefix}\n`;
+  text += `┃  Prefix: ${config.PREFIX}\n`;
   text += `┃  Bug Cmds: ${total}\n`;
   text += `╰━━━━━━━━━━━━━━━╯\n`;
   return text;
@@ -34,11 +34,11 @@ const buildBugMenuText = ({ commands, owner, userTag, botName }) => {
     text += '│ -   No bug commands installed\n';
   } else {
     commands.forEach((cmd) => {
-      text += `│ -   ${config.prefix}${cmd.name}\n`;
+      text += `│ -   ${config.PREFIX}${cmd.name}\n`;
     });
   }
   text += '╰──────────────\n\n';
-  text += `💡 Type ${config.prefix}help <command> for more info\n`;
+  text += `💡 Type ${config.PREFIX}help <command> for more info\n`;
   text += `🌟 Bot Version: ${config.version || '1.0.0'}\n`;
   return text;
 };
@@ -55,7 +55,7 @@ const sendBugMenu = async (sock, msg, extra, text, botName) => {
         forwardingScore: 1,
         isForwarded: true,
         forwardedNewsletterMessageInfo: {
-          newsletterJid: config.newsletterJid || '120363161513685998@newsletter',
+          newsletterJid: config.CHANNEL_JID || '120363161513685998@newsletter',
           newsletterName: botName,
           serverMessageId: -1
         }
@@ -81,9 +81,9 @@ module.exports = {
     try {
       const commands = loadCommands();
       const bugCommands = collectBugCommands(commands);
-      const ownerNames = Array.isArray(config.ownerName) ? config.ownerName : [config.ownerName];
+      const ownerNames = Array.isArray(config.OWNER_NAME) ? config.OWNER_NAME : [config.OWNER_NAME];
       const displayOwner = ownerNames[0] || 'Bot Owner';
-      const botName = config.botName || 'ProBoy-MD';
+      const botName = config.BOT_NAME || 'ProBoy-MD';
       const userTag = extra.sender.split('@')[0];
 
       const text = buildBugMenuText({

@@ -11,7 +11,7 @@ module.exports = {
   name: 'gitupload',
   category: 'dev',
   description: 'ZIP file ko direct GitHub repository (Public/Private/Empty) par upload aur update karein.',
-  usage: `${config.prefix}gitupload <repo_url> <github_token>`,
+  usage: `${config.PREFIX}gitupload <repo_url> <github_token>`,
   aliases: ['gitpush', 'pushzip'],
   ownerOnly: true,
 

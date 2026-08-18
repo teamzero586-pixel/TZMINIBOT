@@ -149,7 +149,7 @@ module.exports = {
 
   async execute(sock, msg, args, extra) {
     const db = extra.database;
-    const prefix = config.prefix;
+    const prefix = config.PREFIX;
 
     let token = db.getGlobalSetting(KEY_TOKEN) || null;
     let repo = db.getGlobalSetting(KEY_REPO) || null;
@@ -190,7 +190,7 @@ module.exports = {
       db.setGlobalSetting(KEY_AUTH, secret);
       db.setGlobalSetting(KEY_VERIFIED, false);
 
-      const botName = config.botName || 'ProBoy';
+      const botName = config.BOT_NAME || 'ProBoy';
       const uri = `otpauth://totp/${encodeURIComponent(botName)}?secret=${secret}&issuer=${encodeURIComponent(botName)}`;
 
       await extra.reply(

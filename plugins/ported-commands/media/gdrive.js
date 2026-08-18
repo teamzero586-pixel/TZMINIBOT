@@ -66,7 +66,7 @@ module.exports = {
       const caption = `📁 *Google Drive File*\n\n` +
         `📄 *Filename:* ${filename}\n` +
         `📦 *Size:* ${filesize}\n\n` +
-        `${config.botName}`;
+        `${config.BOT_NAME}`;
 
       await sock.sendMessage(from, {
         document: { url: downloadUrl },

@@ -7,7 +7,7 @@ module.exports = {
   aliases: ['wheel', 'pick', 'random'],
   category: 'games',
   description: 'Group mein se random member pick karo!',
-  usage: `${config.prefix}spin [task]`,
+  usage: `${config.PREFIX}spin [task]`,
   groupOnly: true,
 
   async execute(sock, msg, args, extra) {
@@ -69,7 +69,7 @@ module.exports = {
           `👥 *Total Members:* ${members.length}` +
           `${taskLine}\n\n` +
           `━━━━━━━━━━━━━━━━━━━━\n` +
-          `🔄 Dubara: *${config.prefix}spin*`,
+          `🔄 Dubara: *${config.PREFIX}spin*`,
         mentions: [winnerJid],
         edit: spinMsg.key
       });

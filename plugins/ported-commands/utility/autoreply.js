@@ -122,11 +122,11 @@ module.exports = {
       if (!args.length) {
         return extra.reply(
           `📋 *Auto‑Reply (Global)*\n\n` +
-          `❇️ Add text: \`${config.prefix}autoreply hi+Hello!\`\n` +
-          `🖼️ Add media: reply to an image/video/voice with \`${config.prefix}autoreply hello+\` (optional caption after +)\n` +
-          `🗑️ Remove: \`${config.prefix}autoreply remove <trigger>\`\n` +
-          `📃 List: \`${config.prefix}autoreply list\`\n` +
-          `🧹 Clear all: \`${config.prefix}autoreply clear\``
+          `❇️ Add text: \`${config.PREFIX}autoreply hi+Hello!\`\n` +
+          `🖼️ Add media: reply to an image/video/voice with \`${config.PREFIX}autoreply hello+\` (optional caption after +)\n` +
+          `🗑️ Remove: \`${config.PREFIX}autoreply remove <trigger>\`\n` +
+          `📃 List: \`${config.PREFIX}autoreply list\`\n` +
+          `🧹 Clear all: \`${config.PREFIX}autoreply clear\``
         );
       }
 

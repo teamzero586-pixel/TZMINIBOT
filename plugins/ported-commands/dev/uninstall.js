@@ -7,7 +7,7 @@ module.exports = {
   aliases: ['removeplugin', 'delplugin', 'unload'],
   category: 'dev',
   description: 'Uninstall a plugin by name (deletes its file)',
-  usage: `${config.prefix}uninstall <plugin_name>`,
+  usage: `${config.PREFIX}uninstall <plugin_name>`,
   ownerOnly: true,
 
   async execute(sock, msg, args, extra) {

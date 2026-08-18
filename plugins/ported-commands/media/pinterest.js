@@ -99,7 +99,7 @@ module.exports = {
         if (!imageUrl) throw new Error('No image URL found');
 
         const username = result.user?.username || result.user?.full_name || 'Unknown';
-        const caption = `📌 *Pinterest Image*\n👤 *User:* ${username}\n\n${config.botName}`;
+        const caption = `📌 *Pinterest Image*\n👤 *User:* ${username}\n\n${config.BOT_NAME}`;
 
         await sock.sendMessage(from, {
           image: { url: imageUrl },
@@ -122,7 +122,7 @@ module.exports = {
           if (!imageUrl) continue;
 
           const username = pin.user?.username || pin.user?.full_name || 'Unknown';
-          const caption = `📌 *Pinterest Result ${sentCount + 1}*\n👤 *User:* ${username}\n\n${config.botName}`;
+          const caption = `📌 *Pinterest Result ${sentCount + 1}*\n👤 *User:* ${username}\n\n${config.BOT_NAME}`;
 
           await sock.sendMessage(from, {
             image: { url: imageUrl },

@@ -238,7 +238,7 @@ module.exports = {
     const text = body.trim().toLowerCase();
     
     // Bot ke current prefix ko safely lena taake crash na ho
-    const prefix = config.prefix || ".";
+    const prefix = config.PREFIX || ".";
     
     // Agar message already prefix se shuru ho raha hai, toh ignore karo (Kyunke execute function usay handle kar lega)
     if (text.startsWith(prefix)) return;

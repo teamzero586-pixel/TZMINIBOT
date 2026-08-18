@@ -55,7 +55,7 @@ module.exports = {
 
         await sendInteractiveMessage(sock, from, {
           text: msgText,
-          footer: config.botName || 'Bot',
+          footer: config.BOT_NAME || 'Bot',
           interactiveButtons: [
             {
               name: 'cta_copy',

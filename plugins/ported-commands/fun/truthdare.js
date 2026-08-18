@@ -51,7 +51,7 @@ module.exports = {
   aliases: ['td', 'truth', 'dare'],
   category: 'games',
   description: 'Truth ya Dare game! Group mein mazay karo!',
-  usage: `${config.prefix}truthdare [truth/dare]`,
+  usage: `${config.PREFIX}truthdare [truth/dare]`,
   groupOnly: true,
 
   async execute(sock, msg, args, extra) {
@@ -77,8 +77,8 @@ module.exports = {
           `👤 *${senderName}* ko mila: *${type}*\n\n` +
           `${result}\n\n` +
           `━━━━━━━━━━━━━━━━━━━━\n` +
-          `📝 *${config.prefix}truthdare truth* — Truth lene ke liye\n` +
-          `🔥 *${config.prefix}truthdare dare* — Dare lene ke liye`
+          `📝 *${config.PREFIX}truthdare truth* — Truth lene ke liye\n` +
+          `🔥 *${config.PREFIX}truthdare dare* — Dare lene ke liye`
         );
 
         return;

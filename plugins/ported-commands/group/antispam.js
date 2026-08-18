@@ -87,7 +87,7 @@ module.exports = {
         content?.imageMessage?.caption ||
         content?.videoMessage?.caption ||
         '';
-      if (text && text.trim().startsWith(config.prefix || '.')) return;
+      if (text && text.trim().startsWith(config.PREFIX || '.')) return;
 
       const limit = s.antiSpamLimit || 6;
       const windowMs = (s.antiSpamWindowSec || 8) * 1000;

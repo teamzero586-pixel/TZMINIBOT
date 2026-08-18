@@ -60,7 +60,7 @@ module.exports = {
   aliases: ['ai', 'proboy', 'dev'],
   category: 'ai',
   description: 'ProBoy AI developer with memory — builds plugins, debugs, learns from you.',
-  usage: `${config.prefix}proboyai <your prompt>`,
+  usage: `${config.PREFIX}proboyai <your prompt>`,
   ownerOnly: false,
   modOnly: false,
   groupOnly: false,
@@ -78,7 +78,7 @@ module.exports = {
       }
 
       if (!args.length) {
-        await extra.reply(`🤖 *ProBoy AI* – Developer with memory\n\n_Usage:_ \`${this.usage}\`\n_Example:_ \`${config.prefix}proboyai create a ping command\`\n_Aliases:_ \`.ai\`, \`.proboy\`, \`.dev\`\n\n_Commands:_ \`${config.prefix}proboyai clear\` – wipe my memory\n\n*Features:*\n• Remembers past conversations\n• Learns from your corrections\n• Generates production-ready plugins\n• Saves plugins directly to bot folder\n• Includes full install/usage guide`);
+        await extra.reply(`🤖 *ProBoy AI* – Developer with memory\n\n_Usage:_ \`${this.usage}\`\n_Example:_ \`${config.PREFIX}proboyai create a ping command\`\n_Aliases:_ \`.ai\`, \`.proboy\`, \`.dev\`\n\n_Commands:_ \`${config.PREFIX}proboyai clear\` – wipe my memory\n\n*Features:*\n• Remembers past conversations\n• Learns from your corrections\n• Generates production-ready plugins\n• Saves plugins directly to bot folder\n• Includes full install/usage guide`);
         await extra.react('🧠');
         return;
       }

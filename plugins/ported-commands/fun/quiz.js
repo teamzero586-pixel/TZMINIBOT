@@ -31,7 +31,7 @@ module.exports = {
   aliases: ['q', 'trivia'],
   category: 'games',
   description: 'Group mein fun quiz khelein! Jawab dene ke liye number type karo.',
-  usage: `${config.prefix}quiz`,
+  usage: `${config.PREFIX}quiz`,
   groupOnly: true,
 
   async execute(sock, msg, args, extra) {
@@ -103,7 +103,7 @@ module.exports = {
             `🏆 *${senderName} JEE GAYA!* 🎉\n\n` +
             `✅ Sahi Jawab: *${quiz.question.options[quiz.question.ans]}*\n` +
             `⚡ Time: *${timeTaken} seconds*\n\n` +
-            `Agle quiz ke liye: *${config.prefix}quiz*`
+            `Agle quiz ke liye: *${config.PREFIX}quiz*`
         });
         await sock.sendMessage(chatId, { react: { text: '🏆', key: msg.key } });
       } else {

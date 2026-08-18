@@ -82,7 +82,7 @@ module.exports = {
       }
 
       const qualityText = wantHD && videoUrl === (data.HD || data.hd) ? ' (HD)' : '';
-      const caption = `📘 *Facebook Video${qualityText}*\n\n${config.botName}`;
+      const caption = `📘 *Facebook Video${qualityText}*\n\n${config.BOT_NAME}`;
 
       await sock.sendMessage(from, {
         video: { url: videoUrl },

@@ -33,7 +33,7 @@ module.exports = {
   aliases: ['wouldyourather', 'wybr'],
   category: 'games',
   description: 'Would You Rather — Muskil choices karo aur batao!',
-  usage: `${config.prefix}wyr`,
+  usage: `${config.PREFIX}wyr`,
   groupOnly: true,
 
   async execute(sock, msg, args, extra) {

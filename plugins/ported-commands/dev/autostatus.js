@@ -22,7 +22,7 @@ module.exports = {
   aliases: ['statusauto', 'autostory'],
   category: 'dev',
   description: 'Auto view and auto like WhatsApp statuses',
-  usage: `${config.prefix}autostatus <on|off|view|like|emoji|status> [emoji]`,
+  usage: `${config.PREFIX}autostatus <on|off|view|like|emoji|status> [emoji]`,
   ownerOnly: true,
 
   async onMessage(sock, msg, extra) {
@@ -64,21 +64,21 @@ module.exports = {
 
     if (sub === 'view') {
       const next = String(args[1] || '').toLowerCase();
-      if (!['on', 'off'].includes(next)) return extra.reply(`❌ Usage: ${config.prefix}autostatus view <on|off>`);
+      if (!['on', 'off'].includes(next)) return extra.reply(`❌ Usage: ${config.PREFIX}autostatus view <on|off>`);
       db.setGlobalSetting(KEY_VIEW, next === 'on');
       return extra.reply(`✅ Auto status view ${next === 'on' ? 'enabled' : 'disabled'}.`);
     }
 
     if (sub === 'like') {
       const next = String(args[1] || '').toLowerCase();
-      if (!['on', 'off'].includes(next)) return extra.reply(`❌ Usage: ${config.prefix}autostatus like <on|off>`);
+      if (!['on', 'off'].includes(next)) return extra.reply(`❌ Usage: ${config.PREFIX}autostatus like <on|off>`);
       db.setGlobalSetting(KEY_LIKE, next === 'on');
       return extra.reply(`✅ Auto status like ${next === 'on' ? 'enabled' : 'disabled'}.`);
     }
 
     if (sub === 'emoji') {
       const emoji = String(args[1] || '').trim();
-      if (!emoji) return extra.reply(`❌ Usage: ${config.prefix}autostatus emoji 💚`);
+      if (!emoji) return extra.reply(`❌ Usage: ${config.PREFIX}autostatus emoji 💚`);
       db.setGlobalSetting(KEY_EMOJI, emoji);
       return extra.reply(`✅ Auto status like emoji set to ${emoji}`);
     }
@@ -88,11 +88,11 @@ module.exports = {
       `View: ${state.autoView ? 'ON' : 'OFF'}\n` +
       `Like: ${state.autoLike ? 'ON' : 'OFF'}\n` +
       `Emoji: ${state.likeEmoji}\n\n` +
-      `${config.prefix}autostatus on\n` +
-      `${config.prefix}autostatus off\n` +
-      `${config.prefix}autostatus view on\n` +
-      `${config.prefix}autostatus like on\n` +
-      `${config.prefix}autostatus emoji 💚`
+      `${config.PREFIX}autostatus on\n` +
+      `${config.PREFIX}autostatus off\n` +
+      `${config.PREFIX}autostatus view on\n` +
+      `${config.PREFIX}autostatus like on\n` +
+      `${config.PREFIX}autostatus emoji 💚`
     );
   }
 };

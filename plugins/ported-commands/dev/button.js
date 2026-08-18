@@ -25,7 +25,7 @@ module.exports = {
     const next = sub === 'on';
     database.setGlobalSetting(key, next);
     await react(next ? '✅' : '⚙️');
-    return reply(`✅ ${config.botName} menu button mode ${next ? 'enabled' : 'disabled'}.`);
+    return reply(`✅ ${config.BOT_NAME} menu button mode ${next ? 'enabled' : 'disabled'}.`);
   }
 };
 

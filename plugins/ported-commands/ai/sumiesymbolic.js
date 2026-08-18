@@ -22,9 +22,9 @@ module.exports = {
       const apiUrl = `${baseUrl}/image?prompt=${encodeURIComponent(prompt)}&model=flux&style=${style}`;
       const response = await axios({ method: 'get', url: apiUrl, responseType: 'arraybuffer' });
       const imageBuffer = Buffer.from(response.data);
-      const tempFile = path.join(tmpdir(), `${config.botName}_ai_${Date.now()}.png`);
+      const tempFile = path.join(tmpdir(), `${config.BOT_NAME}_ai_${Date.now()}.png`);
       await writeFile(tempFile, imageBuffer);
-      await sock.sendMessage(from, { image: { url: tempFile }, caption: `🎨 *Prompt:* ${prompt}\n✨ *Style:* Sumi-e Symbolic\n🧠 *Powered by ${config.botName} AI*` }, { quoted: msg });
+      await sock.sendMessage(from, { image: { url: tempFile }, caption: `🎨 *Prompt:* ${prompt}\n✨ *Style:* Sumi-e Symbolic\n🧠 *Powered by ${config.BOT_NAME} AI*` }, { quoted: msg });
       await unlink(tempFile).catch(() => {});
       await react('✅');
     } catch (error) {

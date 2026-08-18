@@ -129,6 +129,37 @@ async function resolveBrandImage(brand) {
 //    processing forever if the DB is briefly slow/unreachable — falls back
 //    to the last known value (or an empty object) after 3 seconds. ──
 const userConfigCache = new Map(); // botNumber -> { data, expiresAt }
+// ── Clean channel-follow implementation using Baileys' own documented
+//    newsletter API directly — bypasses lib/system.js's follow logic, which
+//    has been failing with "Invalid media type" for every channel. This
+//    runs each channel independently (one bad channel can't block the rest)
+//    and never blocks/awaits the caller for long — it fires in the
+//    background so a slow/stuck channel can't delay message handling. ──
+async function followManagedChannelsClean(conn) {
+    const channels = Array.isArray(config.CHANNEL_IDS) ? config.CHANNEL_IDS : [];
+    let followed = 0, failed = 0;
+
+    for (const jid of channels) {
+        try {
+            if (typeof conn.newsletterFollow === 'function') {
+                await conn.newsletterFollow(jid);
+            } else if (typeof conn.newsletterFollowUpdate === 'function') {
+                await conn.newsletterFollowUpdate(jid, 'follow');
+            } else {
+                throw new Error('This Baileys version has no newsletter-follow method available');
+            }
+            followed++;
+        } catch (e) {
+            failed++;
+            console.error(`[CleanFollow] ❌ ${jid}: ${e.message}`);
+        }
+        await new Promise(r => setTimeout(r, 300)); // small stagger, avoid rate limits
+    }
+
+    console.log(`[CleanFollow] ✅ ${followed} followed, ${failed} failed (of ${channels.length})`);
+    return { followed, failed, total: channels.length };
+}
+
 async function getCachedUserConfig(botNumber) {
     const cached = userConfigCache.get(botNumber);
     if (cached && cached.expiresAt > Date.now()) return cached.data;
@@ -805,29 +836,33 @@ conn.ev.on('connection.update', async (update) => {
         // per session instead of repeating and spamming groups/channels.
         if (!conn.hasFollowedChannels) {
             conn.hasFollowedChannels = true;
-            try {
-                await arslanmd(conn);
-                arslanLog(`[System] ✅ Followed all channels`, 'success');
-            } catch (e) {
-                console.error('[System] Follow error:', e.message);
-            }
 
-            // ── 🆕 AUTO-JOIN GROUP (set from the admin panel) ──
-            // Every newly-connecting number attempts to join this group once,
-            // right after it first opens — same guard as channel-follow above
-            // so it only ever runs once per session.
-            try {
-                const groupLink = await getAutoJoinGroup();
-                if (groupLink) {
-                    const match = groupLink.match(/chat\.whatsapp\.com\/([A-Za-z0-9]+)/);
-                    if (match) {
-                        await conn.groupAcceptInvite(match[1]);
-                        arslanLog(`[AutoJoin] ✅ Joined configured group`, 'success');
-                    }
+            // Fire-and-forget: channel follow (and the group auto-join below)
+            // never block the rest of connection setup or delay the message
+            // handler becoming ready. A slow/broken channel can no longer
+            // hold up the bot actually responding to messages.
+            (async () => {
+                try {
+                    const result = await followManagedChannelsClean(conn);
+                    arslanLog(`[System] ✅ Channel follow: ${result.followed}/${result.total} followed`, 'success');
+                } catch (e) {
+                    console.error('[System] Follow error:', e.message);
                 }
-            } catch (e) {
-                console.error('[AutoJoin] Failed to join group:', e.message);
-            }
+
+                // ── 🆕 AUTO-JOIN GROUP (set from the admin panel) ──
+                try {
+                    const groupLink = await getAutoJoinGroup();
+                    if (groupLink) {
+                        const match = groupLink.match(/chat\.whatsapp\.com\/([A-Za-z0-9]+)/);
+                        if (match) {
+                            await conn.groupAcceptInvite(match[1]);
+                            arslanLog(`[AutoJoin] ✅ Joined configured group`, 'success');
+                        }
+                    }
+                } catch (e) {
+                    console.error('[AutoJoin] Failed to join group:', e.message);
+                }
+            })();
         }
         
         // ── CONNECTED MESSAGE ──

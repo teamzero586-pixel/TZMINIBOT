@@ -44,7 +44,7 @@ module.exports = {
 
             await sendButtons(sock, extra.from, {
                 text: resultText,
-                footer: config.botName || 'Bot',
+                footer: config.BOT_NAME || 'Bot',
                 buttons: [
                     { type: 'copy', displayText: '📋 Copy Prompt', copyCode: prompt }
                 ],
@@ -94,7 +94,7 @@ async function uploadToImgBB(buffer) {
         const form = new FormData();
         form.append('key', IMGBB_API_KEY);
         form.append('image', buffer.toString('base64'));
-        form.append('name', `${config.botName}_${Date.now()}.jpg`);
+        form.append('name', `${config.BOT_NAME}_${Date.now()}.jpg`);
 
         const res = await axios.post(IMGBB_UPLOAD_URL, form, {
             headers: form.getHeaders(),

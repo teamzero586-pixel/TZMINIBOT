@@ -38,7 +38,7 @@ module.exports = {
             {
                 type: 'copy',
                 displayText: '📋 Copy Pair Code',
-                copyCode: `${extra.config.botName || 'Bot'}!... (your session code)`
+                copyCode: `${extra.config.BOT_NAME || 'Bot'}!... (your session code)`
             },
             {
                 type: 'url',
@@ -49,8 +49,8 @@ module.exports = {
 
         // Send the button message
         await sendButtons(sock, extra.from, {
-            text: `╭═══〘 *${extra.config.botName} Control Panel* 〙═══⊷❍\n┃✯│ 👑 Owner: ${extra.config.ownerName.join(', ')}\n┃✯│ 🤖 Bot: ${extra.config.botName}\n┃✯│ ⚡ Prefix: ${extra.config.prefix}\n┃✯│ 📱 Your Number: ${extra.sender.split('@')[0]}\n╰══════════════════⊷❍\n\n_Tap a button below:_`,
-            footer: `⚡ ${extra.config.botName} v${extra.config.version}`,
+            text: `╭═══〘 *${extra.config.BOT_NAME} Control Panel* 〙═══⊷❍\n┃✯│ 👑 Owner: ${extra.config.ownerName.join(', ')}\n┃✯│ 🤖 Bot: ${extra.config.BOT_NAME}\n┃✯│ ⚡ Prefix: ${extra.config.prefix}\n┃✯│ 📱 Your Number: ${extra.sender.split('@')[0]}\n╰══════════════════⊷❍\n\n_Tap a button below:_`,
+            footer: `⚡ ${extra.config.BOT_NAME} v${extra.config.version}`,
             buttons: buttons,
             quoted: msg
         });

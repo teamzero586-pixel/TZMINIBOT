@@ -67,7 +67,7 @@ module.exports = {
       const caption = `🎬 *CapCut Template*\n\n` +
         `📌 *Title:* ${title}\n` +
         `👤 *Author:* ${author}\n\n` +
-        `${config.botName}`;
+        `${config.BOT_NAME}`;
 
       const messageOptions = {
         video: { url: videoUrl },

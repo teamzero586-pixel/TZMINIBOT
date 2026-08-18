@@ -117,7 +117,7 @@ module.exports = {
 📂 *Category:* ${category}
 🔍 *Query:* ${query}
 
-_Powered by ${config.botName}_`;
+_Powered by ${config.BOT_NAME}_`;
 
           await sock.sendMessage(from, {
             image: imgBuffer,

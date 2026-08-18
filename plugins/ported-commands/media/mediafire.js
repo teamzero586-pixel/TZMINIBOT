@@ -74,7 +74,7 @@ module.exports = {
         `👤 *Owner:* ${owner}\n` +
         `🔤 *Extension:* ${ext}\n` +
         `📋 *Type:* ${type}\n\n` +
-        `${config.botName}`;
+        `${config.BOT_NAME}`;
 
       await sock.sendMessage(from, {
         document: { url: downloadUrl },

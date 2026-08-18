@@ -36,7 +36,7 @@ module.exports = {
                 
                 // Format the response with proper styling
                 let message = `╭━━『 *GitHub Repository* 』━━╮\n\n`;
-                message += `🤖 *Bot Name:* ${config.botName}\n`;
+                message += `🤖 *Bot Name:* ${config.BOT_NAME}\n`;
                 message += `🔗 *Repository:* ${repo.name}\n`;
                 message += `👨‍💻 *Owner:* ${repo.owner.login}\n`;
                 message += `📄 *Description:* ${repo.description || 'No description provided'}\n`;
@@ -54,7 +54,7 @@ module.exports = {
                 message += `📥 Clone: git clone ${repo.clone_url}\n\n`;
                 
                 message += `╰━━━━━━━━━━━━━━━╯\n\n`;
-                message += `> *ᴘᴏᴡᴇʀᴇᴅ ʙʏ ${config.botName}*`;
+                message += `> *ᴘᴏᴡᴇʀᴇᴅ ʙʏ ${config.BOT_NAME}*`;
                 
                 // Edit the loading message with the actual data
                 await sock.sendMessage(chatId, {
@@ -67,14 +67,14 @@ module.exports = {
                 console.error('GitHub API Error:', apiError.message);
                 
                 let fallbackMessage = `╭━━『 *GitHub Repository* 』━━╮\n\n`;
-                fallbackMessage += `🤖 *Bot Name:* ${config.botName}\n`;
-                fallbackMessage += `🔗 *Repository:* ${config.botName}\n`;
-                fallbackMessage += `👨‍💻 *Owner:* ${config.ownerName}\n`;
+                fallbackMessage += `🤖 *Bot Name:* ${config.BOT_NAME}\n`;
+                fallbackMessage += `🔗 *Repository:* ${config.BOT_NAME}\n`;
+                fallbackMessage += `👨‍💻 *Owner:* ${config.OWNER_NAME}\n`;
                 fallbackMessage += `🌐 *URL:* ${repoUrl}\n\n`;
                 fallbackMessage += `⚠️ *Note:* Unable to fetch real-time statistics.\n`;
                 fallbackMessage += `Please visit the repository directly for latest stats.\n\n`;
                 fallbackMessage += `╰━━━━━━━━━━━━━━━╯\n\n`;
-                fallbackMessage += `> *ᴘᴏᴡᴇʀᴇᴅ ʙʏ ${config.botName}*`;
+                fallbackMessage += `> *ᴘᴏᴡᴇʀᴇᴅ ʙʏ ${config.BOT_NAME}*`;
                 
                 await sock.sendMessage(chatId, {
                     text: fallbackMessage,

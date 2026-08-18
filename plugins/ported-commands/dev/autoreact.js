@@ -32,7 +32,7 @@ module.exports = {
   aliases: ['areact', 'autoreact'],
   category: 'dev',
   description: 'Auto‑react to every incoming message with a chosen emoji',
-  usage: `${config.prefix}autoreact <on|off|set|status>`,
+  usage: `${config.PREFIX}autoreact <on|off|set|status>`,
   ownerOnly: true,
 
   // ▸ onMessage hook
@@ -81,7 +81,7 @@ module.exports = {
           return extra.reply('✅ Auto‑react OFF');
 
         case 'set':
-          if (!args[1]) return extra.reply(`❌ Provide an emoji.\nUsage: ${config.prefix}autoreact set 👍`);
+          if (!args[1]) return extra.reply(`❌ Provide an emoji.\nUsage: ${config.PREFIX}autoreact set 👍`);
           emoji = args[1];
           saveToDB(extra.database);
           if (enabled) await extra.react(emoji);
