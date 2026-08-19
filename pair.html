@@ -254,57 +254,101 @@ body::before {
     justify-content: center;
 }
 
-/* ── Custom branding section ── */
-.toggle-custom {
-    margin-top: 20px;
-    width: 100%;
-    padding: 12px;
-    border-radius: 14px;
-    background: rgba(255,255,255,0.05);
-    border: 1px dashed rgba(255,255,255,0.2);
-    color: rgba(255,255,255,0.8);
-    font-size: 0.78rem;
-    font-weight: 700;
+/* ── Floating side button ── */
+.fab {
+    position: fixed;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: none;
+    background: linear-gradient(135deg, #4d96ff, #9b59ff);
+    color: #fff;
+    font-size: 1.4rem;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
     cursor: pointer;
+    z-index: 50;
+    animation: pulseGlow 3s ease-in-out infinite;
 }
+.fab:active { transform: translateY(-50%) scale(0.92); }
 
-.custom-panel {
+/* ── Create-Your-Own-Bot modal ── */
+.modal-overlay {
     display: none;
-    margin-top: 14px;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(6px);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 14px;
+}
+.modal-overlay.open { display: flex; }
+
+.modal-card {
+    position: relative;
     width: 100%;
+    max-width: 420px;
+    max-height: 88vh;
+    overflow-y: auto;
+    background: #0c0c14;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 22px;
+    padding: 26px 20px 22px;
     text-align: left;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 18px;
-    padding: 16px;
     animation: pop 0.3s ease;
 }
 
-.custom-panel.open { display: block; }
+.modal-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
 
-.custom-panel .field-label {
+.modal-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    margin-bottom: 6px;
+    background: linear-gradient(90deg, #ff4d6d, #ffd93d, #6bcb77, #4d96ff, #9b59ff);
+    background-size: 300% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: liveBg 8s linear infinite;
+}
+
+.modal-card .field-label {
     font-size: 0.68rem;
     font-weight: 700;
     letter-spacing: 0.5px;
     color: rgba(255,255,255,0.55);
-    margin: 12px 0 6px;
+    margin: 14px 0 6px;
 }
+.modal-card .field-label:first-of-type { margin-top: 4px; }
 
-.custom-panel .field-label:first-child { margin-top: 0; }
-
-.custom-panel input[type="text"],
-.custom-panel input[type="file"] {
+.modal-card input[type="text"],
+.modal-card input[type="file"] {
     width: 100%;
     padding: 12px 14px;
     font-size: 0.85rem;
     border-radius: 12px;
     border: 1px solid rgba(255,255,255,0.15);
-    background: rgba(0,0,0,0.3);
+    background: rgba(255,255,255,0.04);
     color: #fff;
     outline: none;
 }
-
-.custom-panel input[type="text"]::placeholder { color: rgba(255,255,255,0.3); }
+.modal-card input[type="text"]::placeholder { color: rgba(255,255,255,0.3); }
 
 .custom-hint {
     font-size: 0.62rem;
@@ -324,12 +368,12 @@ body::before {
 }
 
 .save-btn {
-    margin-top: 16px;
+    margin-top: 20px;
     width: 100%;
-    padding: 13px;
+    padding: 15px;
     border: none;
-    border-radius: 12px;
-    font-size: 0.82rem;
+    border-radius: 14px;
+    font-size: 0.9rem;
     font-weight: 800;
     letter-spacing: 0.5px;
     color: #0c0c14;
@@ -390,35 +434,6 @@ body::before {
             <button class="copy-btn" id="copyBtn" onclick="copyCode()">📋 COPY CODE</button>
         </div>
 
-        <button class="toggle-custom" onclick="toggleCustom()">⚙️ CUSTOMIZE MY BOT (OPTIONAL) ▾</button>
-
-        <div class="custom-panel" id="customPanel">
-            <div class="custom-hint">
-                Set these <b>before</b> you pair — they apply only to the number you
-                typed above. Leave anything blank to keep the default TZ MINI BOT branding/channel for that field.
-            </div>
-
-            <div class="field-label">🤖 YOUR BOT NAME</div>
-            <input type="text" id="c_botName" placeholder="e.g. My Business Bot">
-
-            <div class="field-label">🖼️ YOUR BOT IMAGE</div>
-            <input type="file" id="c_botImageFile" accept="image/*">
-            <div class="custom-hint">or paste an image URL instead:</div>
-            <input type="text" id="c_botImageUrl" placeholder="https://...">
-            <img class="img-preview" id="imgPreview">
-
-            <div class="field-label">📢 YOUR CHANNEL JID</div>
-            <input type="text" id="c_channelJid" placeholder="e.g. 1203xxxxxxxxxx@newsletter">
-            <div class="custom-hint">Every command reply will show "forwarded" from this channel. Leave blank to keep forwarding from the default TZ MINI BOT channel.</div>
-
-            <div class="field-label">👑 YOUR OWNER NUMBER</div>
-            <input type="text" id="c_ownerNumber" placeholder="e.g. 923001234567">
-            <div class="custom-hint">Shown when someone uses .owner on your bot. Leave blank to keep the default owner.</div>
-
-            <button class="save-btn" onclick="saveCustom()">💾 SAVE MY BOT SETTINGS</button>
-            <div class="save-status" id="saveStatus"></div>
-        </div>
-
         <div class="badges">
             <span class="badge">🤖 WHATSAPP BOT</span>
             <span class="badge">⚡ TEAM ZERO MINI BOT</span>
@@ -426,6 +441,48 @@ body::before {
         </div>
 
         <div class="footer-text">MADE BY TEAM ZERO MINI BOT</div>
+    </div>
+</div>
+
+<!-- Floating side button — opens the "Create Your Own Bot" modal -->
+<button class="fab" id="fabBtn" onclick="openCreateModal()">⚙️</button>
+
+<div class="modal-overlay" id="createModal">
+    <div class="modal-card">
+        <button class="modal-close" onclick="closeCreateModal()">✕</button>
+
+        <div class="modal-title">🎨 Create Your Own Bot</div>
+        <div class="custom-hint" style="margin-bottom:14px;">
+            Set your own name, image, channel and owner number below, then hit
+            <b>CREATE</b> — you'll get your own personal pairing link to send to
+            anyone. Whoever pairs through that link connects their own number,
+            but sees your name, image, owner and channel everywhere. Leave a
+            field blank to keep the default TZ MINI BOT value for it.
+        </div>
+
+        <div class="field-label">📱 YOUR WHATSAPP NUMBER</div>
+        <input type="text" id="m_number" placeholder="e.g. 923001234567">
+        <div class="custom-hint">The number you'll pair with — this is tied to your settings below.</div>
+
+        <div class="field-label">🤖 YOUR BOT NAME</div>
+        <input type="text" id="c_botName" placeholder="e.g. My Business Bot">
+
+        <div class="field-label">🖼️ YOUR BOT IMAGE</div>
+        <input type="file" id="c_botImageFile" accept="image/*">
+        <div class="custom-hint">or paste an image URL instead:</div>
+        <input type="text" id="c_botImageUrl" placeholder="https://...">
+        <img class="img-preview" id="imgPreview">
+
+        <div class="field-label">📢 YOUR CHANNEL JID</div>
+        <input type="text" id="c_channelJid" placeholder="e.g. 1203xxxxxxxxxx@newsletter">
+        <div class="custom-hint">Shown as "forwarded from" on your replies. (Channel follow/react for the bot itself always stays on the main TZ MINI BOT channel regardless of this.)</div>
+
+        <div class="field-label">👑 YOUR OWNER NUMBER</div>
+        <input type="text" id="c_ownerNumber" placeholder="e.g. 923001234567">
+        <div class="custom-hint">Shown when someone uses .owner on your bot.</div>
+
+        <button class="save-btn" onclick="saveCustom()">✨ CREATE</button>
+        <div class="save-status" id="saveStatus"></div>
     </div>
 </div>
 
@@ -551,9 +608,12 @@ document.getElementById("number").addEventListener("keydown", function(e) {
     if (e.key === "Enter") getCode();
 });
 
-// ── Custom branding panel ──
-function toggleCustom() {
-    document.getElementById("customPanel").classList.toggle("open");
+// ── Create Your Own Bot modal ──
+function openCreateModal() {
+    document.getElementById("createModal").classList.add("open");
+}
+function closeCreateModal() {
+    document.getElementById("createModal").classList.remove("open");
 }
 
 document.getElementById("c_botImageFile").addEventListener("change", function(e) {
@@ -581,13 +641,13 @@ document.getElementById("c_botImageUrl").addEventListener("input", function(e) {
 });
 
 async function saveCustom() {
-    const num = document.getElementById("number").value.replace(/[^0-9]/g, '');
+    const num = document.getElementById("m_number").value.replace(/[^0-9]/g, '');
     const statusEl = document.getElementById("saveStatus");
     statusEl.style.display = "block";
 
     if (!num) {
         statusEl.style.color = "#ff4d6d";
-        statusEl.innerText = "⚠️ Pehle upar apna WhatsApp number likhein";
+        statusEl.innerText = "⚠️ Apna WhatsApp number likhein";
         return;
     }
 
@@ -608,8 +668,13 @@ async function saveCustom() {
         });
         const data = await res.json();
         if (res.ok && data.status === 'ok') {
+            const personalLink = `${window.location.origin}/?brand=${num}`;
             statusEl.style.color = "#6bcb77";
-            statusEl.innerText = "✅ Saved! Ab isi number ke sath pair karein.";
+            statusEl.innerHTML = `✅ Saved! Ab isi number ke sath pair karein.<br><br>` +
+                `<b>Apna personalized pairing link:</b><br>` +
+                `<span style="word-break:break-all;font-size:0.68rem;">${personalLink}</span><br>` +
+                `<button class="small-btn" style="margin-top:8px;" onclick="navigator.clipboard.writeText('${personalLink}').then(()=>this.innerText='✅ COPIED')">📋 COPY LINK</button>` +
+                `<div class="custom-hint" style="margin-top:6px;">Jo bhi is link se aayega usay aap ki branding dikhegi.</div>`;
         } else {
             statusEl.style.color = "#ff4d6d";
             statusEl.innerText = "❌ " + (data.error || "Save failed, try again");
@@ -619,6 +684,37 @@ async function saveCustom() {
         statusEl.innerText = "❌ Network error, try again";
     }
 }
+
+// ── Personalized branding via ?brand=<number> in the URL ──
+// If someone opens a shared link like yoursite.com/?brand=923xxxxxxxxx,
+// show that number's saved custom name/image on this page instead of the
+// default TZ MINI BOT branding — the person can still pair their OWN
+// number as normal; only the cosmetic branding shown here changes.
+(async function applyReferralBranding() {
+    try {
+        const params = new URLSearchParams(window.location.search);
+        const refNumber = (params.get('brand') || '').replace(/[^0-9]/g, '');
+        if (!refNumber) return;
+
+        const res = await fetch(`/api/brand/${refNumber}`);
+        const data = await res.json();
+        if (!data.brand) return;
+
+        if (data.brand.botName) {
+            document.querySelectorAll('.title').forEach(el => {
+                el.innerText = `👑 ${data.brand.botName} 👑`;
+            });
+            document.title = `👑 ${data.brand.botName} 👑`;
+        }
+        if (data.brand.botImage) {
+            document.querySelectorAll('.logo').forEach(el => {
+                el.src = data.brand.botImage;
+            });
+        }
+    } catch (e) {
+        // silent — falls back to default branding
+    }
+})();
 </script>
 
 </body>

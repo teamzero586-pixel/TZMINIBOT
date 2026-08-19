@@ -3,11 +3,21 @@
  */
 
 const yts = require('yt-search');
+const ytdl = require('ytdl-core');
 const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
 const APIs = require('../../utils/api');
 const { toAudio } = require('../../utils/converter');
+
+function streamToBuffer(stream) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    stream.on('data', c => chunks.push(c));
+    stream.on('end', () => resolve(Buffer.concat(chunks)));
+    stream.on('error', reject);
+  });
+}
 
 const AXIOS_DEFAULTS = {
   timeout: 60000,
@@ -39,6 +49,12 @@ module.exports = {
       
       if (text.includes('youtube.com') || text.includes('youtu.be')) {
         video = { url: text };
+        try {
+          const info = await ytdl.getBasicInfo(text);
+          video.title = info.videoDetails.title;
+          video.thumbnail = info.videoDetails.thumbnails?.[0]?.url;
+          video.timestamp = '';
+        } catch (e) { /* fall through — title/thumbnail are cosmetic only */ }
       } else {
         const search = await yts(text);
         if (!search || !search.videos.length) {
@@ -51,17 +67,34 @@ module.exports = {
       
       // Inform user
       await sock.sendMessage(chatId, {
-        image: { url: video.thumbnail },
-        caption: `Title:\n *${video.title}*\n⏱ Duration: ${video.timestamp}`
+        image: { url: video.thumbnail || 'https://i.ibb.co/k24FR52h/file-0000000069b48207b92f6537b3730c44.png' },
+        caption: `Title:\n *${video.title}*\n⏱ Duration: ${video.timestamp || ''}`
       }, { quoted: msg });
       
-      // Try multiple APIs with fallback chain
-      let audioData;
+      let audioData = {};
       let audioBuffer;
       let downloadSuccess = false;
+
+      // ── Method 0: ytdl-core — downloads directly from YouTube, no
+      //    third-party API dependency, tried first since it's the most
+      //    reliable option when it works. ──
+      try {
+        const info = await ytdl.getInfo(video.url);
+        const durationSec = parseInt(info.videoDetails.lengthSeconds || '0', 10);
+        if (durationSec > 0 && durationSec <= 480) {
+          const stream = ytdl.downloadFromInfo(info, { filter: 'audioonly', quality: 'highestaudio' });
+          audioBuffer = await streamToBuffer(stream);
+          if (audioBuffer && audioBuffer.length > 0) {
+            downloadSuccess = true;
+            audioData.title = info.videoDetails.title;
+          }
+        }
+      } catch (ytdlErr) {
+        console.log('ytdl-core failed, trying backup APIs:', ytdlErr.message);
+      }
       
-      // List of API methods to try
-      const apiMethods = [
+      // ── Fallback chain: third-party APIs, tried only if ytdl-core failed ──
+      const apiMethods = downloadSuccess ? [] : [
         { name: 'EliteProTech', method: () => APIs.getEliteProTechDownloadByUrl(video.url) },
         { name: 'Yupra', method: () => APIs.getYupraDownloadByUrl(video.url) },
         { name: 'Okatsu', method: () => APIs.getOkatsuDownloadByUrl(video.url) },

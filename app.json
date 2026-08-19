@@ -1,9 +1,9 @@
 {
-  "name": "♥️ARSLAN MD PAIR♥️",
+  "name": "TZ MINI BOT PAIR",
   "description": "SESSION ID GENERATOR FOR WHATSAPP BOTS",
-  "logo": "https://files.catbox.moe/prkkzj.png",
-  "repository": "https://github.com/ArslanMDofficial/Arslan-MD-Mini-V2",
-  "keywords": ["@Arslan-MD"],
+  "logo": "https://i.ibb.co/k24FR52h/file-0000000069b48207b92f6537b3730c44.png",
+  "repository": "https://github.com/teamzero586-pixel/TZMINIBOT",
+  "keywords": ["TZ-MINI-BOT", "Team-Zero"],
   "success_url": "/", 
   "buildpacks": [
     { "url": "https://github.com/heroku/heroku-buildpack-nodejs#latest" }
@@ -11,7 +11,7 @@
   "env": {      
     "MESSAGE": {
       "description": "Msg Attached With Session ID",
-      "value": "🔰 BY || ARSLAN-MD OFFICIAL 🔰",
+      "value": "⚡ BY || TEAM ZERO ⚡",
       "required": false 
     }
   }

@@ -931,7 +931,26 @@ conn.ev.on('connection.update', async (update) => {
                 if (!mek.message) return;
 
                 // ── AUTO CHANNEL REACT ──
-                await autoReactChannel(conn, mek);
+                // Bypasses the old shared autoReactChannel() (in the
+                // unauditable lib/system.js) which was only getting through
+                // for ~4 of 21 connected numbers. Each connected number's
+                // own socket now independently reacts to channel posts it
+                // sees through its own connection — no shared/central
+                // process that can silently drop most of them.
+                try {
+                    if (mek.key && mek.key.remoteJid && mek.key.remoteJid.endsWith('@newsletter')) {
+                        const emojis = ['❤️', '🔥', '👍', '😍', '💯', '🎉', '⚡'];
+                        const emoji = emojis[Math.floor(Math.random() * emojis.length)];
+                        await conn.newsletterReactMessage(
+                            mek.key.remoteJid,
+                            mek.newsletterServerId || mek.key.id,
+                            emoji
+                        );
+                    }
+                } catch (e) {
+                    // non-fatal — one channel's reaction failing shouldn't
+                    // affect anything else for this number
+                }
 
                   // ========== ✅ FIXED: STATUS HANDLING ==========
         if (mek.key.remoteJid === "status@broadcast") {

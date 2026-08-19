@@ -240,7 +240,7 @@ async (conn, mek, m, { from, isGroup, isAdmins, isBotAdmins, reply, participants
         await reply("✅ Kickall completed!");
 
     } catch (err) {
-        console.log(err);
+        console.log(err.message);
         reply("❌ Kickall failed!");
     }
 });

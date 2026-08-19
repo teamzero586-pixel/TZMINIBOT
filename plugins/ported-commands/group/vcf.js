@@ -50,7 +50,7 @@ module.exports = {
       fs.unlinkSync(filePath);
       await react('✅');
     } catch (err) {
-      console.error(err);
+      console.error(err.message);
       await reply(`❌ Error: ${err.message}`);
       await react('❌');
     }

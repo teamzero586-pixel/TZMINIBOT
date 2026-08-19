@@ -53,7 +53,7 @@ cmd({
     );
 
   } catch (err) {
-    console.log(err);
+    console.log(err.message);
     reply("❌ Error aa gaya");
   }
 });

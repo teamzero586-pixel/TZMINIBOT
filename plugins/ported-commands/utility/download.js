@@ -100,7 +100,7 @@ module.exports = {
       );
 
     } catch (err) {
-      console.error(err);
+      console.error(err.message);
 
       await extra.react('❌');
       await extra.reply(

@@ -4,7 +4,17 @@
 
 const axios = require('axios');
 const yts = require('yt-search');
+const ytdl = require('ytdl-core');
 const APIs = require('../../utils/api');
+
+function streamToBuffer(stream) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    stream.on('data', c => chunks.push(c));
+    stream.on('end', () => resolve(Buffer.concat(chunks)));
+    stream.on('error', reject);
+  });
+}
 
 module.exports = {
   name: 'video',
@@ -44,38 +54,63 @@ module.exports = {
         caption: `🎥 Downloading: *${videoTitle}*`
       }, { quoted: msg });
 
-      let videoData;
+      let videoBuffer;
+      let finalTitle = videoTitle;
       let downloadSuccess = false;
-      const apiMethods = [
-        { name: 'EliteProTech', method: () => APIs.getEliteProTechVideoByUrl(videoUrl) },
-        { name: 'Yupra', method: () => APIs.getYupraVideoByUrl(videoUrl) },
-        { name: 'Okatsu', method: () => APIs.getOkatsuVideoByUrl(videoUrl) }
-      ];
 
-      for (const apiMethod of apiMethods) {
-        try {
-          videoData = await apiMethod.method();
-          if (videoData.download) {
+      // ── Method 0: ytdl-core — downloads directly from YouTube, no
+      //    third-party API dependency, tried first. ──
+      try {
+        const info = await ytdl.getInfo(videoUrl);
+        const durationSec = parseInt(info.videoDetails.lengthSeconds || '0', 10);
+        if (durationSec > 0 && durationSec <= 300) {
+          const stream = ytdl.downloadFromInfo(info, { quality: '18' }); // 360p progressive mp4, video+audio together
+          videoBuffer = await streamToBuffer(stream);
+          if (videoBuffer && videoBuffer.length > 0) {
             downloadSuccess = true;
-            break;
+            finalTitle = info.videoDetails.title;
           }
-        } catch (err) {
-          console.log(`${apiMethod.name} failed:`, err.message);
         }
+      } catch (ytdlErr) {
+        console.log('ytdl-core failed, trying backup APIs:', ytdlErr.message);
       }
 
-      if (!downloadSuccess) throw new Error('All download sources failed. The video may be unavailable or blocked.');
+      // ── Fallback chain: third-party APIs, tried only if ytdl-core failed ──
+      if (!downloadSuccess) {
+        let videoData;
+        const apiMethods = [
+          { name: 'EliteProTech', method: () => APIs.getEliteProTechVideoByUrl(videoUrl) },
+          { name: 'Yupra', method: () => APIs.getYupraVideoByUrl(videoUrl) },
+          { name: 'Okatsu', method: () => APIs.getOkatsuVideoByUrl(videoUrl) }
+        ];
 
-      // Download as a Buffer instead of a raw {url} — more reliable, since
-      // some of these download hosts block hotlinking from WhatsApp itself.
-      const resp = await axios.get(videoData.download, { responseType: 'arraybuffer', timeout: 120000, maxContentLength: Infinity, maxBodyLength: Infinity });
-      const videoBuffer = Buffer.from(resp.data);
+        let apiDownloadSuccess = false;
+        for (const apiMethod of apiMethods) {
+          try {
+            videoData = await apiMethod.method();
+            if (videoData.download) {
+              apiDownloadSuccess = true;
+              break;
+            }
+          } catch (err) {
+            console.log(`${apiMethod.name} failed:`, err.message);
+          }
+        }
+
+        if (!apiDownloadSuccess) throw new Error('All download sources failed. The video may be unavailable or blocked.');
+
+        // Download as a Buffer instead of a raw {url} — more reliable, since
+        // some of these download hosts block hotlinking from WhatsApp itself.
+        const resp = await axios.get(videoData.download, { responseType: 'arraybuffer', timeout: 120000, maxContentLength: Infinity, maxBodyLength: Infinity });
+        videoBuffer = Buffer.from(resp.data);
+        finalTitle = videoData.title || videoTitle;
+      }
 
       await sock.sendMessage(chatId, {
         video: videoBuffer,
         mimetype: 'video/mp4',
-        fileName: `${(videoData.title || videoTitle || 'video').replace(/[^\w\s-]/g, '')}.mp4`,
-        caption: `*${videoData.title || videoTitle}*\n\n> © TZ MINI BOT`
+        fileName: `${(finalTitle || 'video').replace(/[^\w\s-]/g, '')}.mp4`,
+        caption: `*${finalTitle}*\n\n> © TZ MINI BOT`
       }, { quoted: msg });
 
     } catch (error) {
