@@ -1355,12 +1355,28 @@ async function setupCallHandlers(socket, number) {
 // ========== AUTO RESTART ==========
 function setupAutoRestart(socket, number) {
     let restartAttempts = 0;
-    // No hard cap — a long-running bot needs to keep trying to recover from
-    // transient network blips, WhatsApp server hiccups, or Heroku's routine
-    // dyno restarts, indefinitely. Capping this at a small number was why
-    // sessions used to go permanently unresponsive after a few disconnects
-    // and needed a manual delete+reconnect to come back.
+    // No hard cap on backoff growth — a long-running bot needs to keep
+    // trying to recover from transient network blips, WhatsApp server
+    // hiccups, or Heroku's routine dyno restarts. BUT certain disconnect
+    // reasons mean the session itself is permanently dead (banned,
+    // replaced by another device, or corrupted) — retrying those forever
+    // was pinning one broken number in an endless reconnect loop every
+    // ~10s, burning CPU/memory/MongoDB round-trips nonstop and starving
+    // every other connected number of resources. Those get cleaned up
+    // and stopped instead of retried.
     const maxBackoffMs = 60000; // never wait longer than 60s between tries
+    const FATAL_CODES = [401, 403, 440, 500]; // loggedOut, forbidden/banned, replaced, badSession
+    const MAX_CONSECUTIVE_FAILURES = 10; // safety net for any misclassified permanent failure
+
+    async function cleanupPermanently(reason) {
+        arslanLog(`${reason} for ${number}, stopping retries and cleaning up session.`, 'warning');
+        const sanitizedNumber = number.replace(/[^0-9]/g, '');
+        activeSockets.delete(sanitizedNumber);
+        socketCreationTime.delete(sanitizedNumber);
+        await deleteSessionFromMongoDB(sanitizedNumber);
+        await removeNumberFromMongoDB(sanitizedNumber);
+        socket.ev.removeAllListeners();
+    }
 
     socket.ev.on('connection.update', async (update) => {
         const { connection, lastDisconnect } = update;
@@ -1369,14 +1385,8 @@ function setupAutoRestart(socket, number) {
             const errorMessage = lastDisconnect && lastDisconnect.error && lastDisconnect.error.message;
             arslanLog(`Connection closed for ${number}: ${statusCode} - ${errorMessage}`, 'warning');
 
-            if (statusCode === 401 || (errorMessage && errorMessage.includes('401'))) {
-                arslanLog(`Manual unlink detected for ${number}, cleaning up...`, 'warning');
-                const sanitizedNumber = number.replace(/[^0-9]/g, '');
-                activeSockets.delete(sanitizedNumber);
-                socketCreationTime.delete(sanitizedNumber);
-                await deleteSessionFromMongoDB(sanitizedNumber);
-                await removeNumberFromMongoDB(sanitizedNumber);
-                socket.ev.removeAllListeners();
+            if (FATAL_CODES.includes(statusCode) || (errorMessage && errorMessage.includes('401'))) {
+                await cleanupPermanently(`Fatal disconnect (${statusCode})`);
                 return;
             }
 
@@ -1384,8 +1394,14 @@ function setupAutoRestart(socket, number) {
             if (isNormalError) { arslanLog(`Normal closure for ${number}, no restart needed.`, 'info'); return; }
 
             restartAttempts++;
+
+            if (restartAttempts > MAX_CONSECUTIVE_FAILURES) {
+                await cleanupPermanently(`Gave up after ${MAX_CONSECUTIVE_FAILURES} consecutive failed reconnect attempts`);
+                return;
+            }
+
             const backoff = Math.min(10000 * restartAttempts, maxBackoffMs);
-            arslanLog(`Reconnecting ${number} (attempt ${restartAttempts}) in ${backoff / 1000}s...`, 'warning');
+            arslanLog(`Reconnecting ${number} (attempt ${restartAttempts}/${MAX_CONSECUTIVE_FAILURES}) in ${backoff / 1000}s...`, 'warning');
             const sanitizedNumber = number.replace(/[^0-9]/g, '');
             activeSockets.delete(sanitizedNumber);
             socketCreationTime.delete(sanitizedNumber);
