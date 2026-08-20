@@ -716,7 +716,14 @@ async function arslanPair(number, res = null) {
         }
 
         const { state, saveCreds } = await useMultiFileAuthState(sessionPath);
-        const logger = pino({ level: process.env.NODE_ENV === 'production' ? 'fatal' : 'debug' });
+        // Was `debug` level unless NODE_ENV==='production' — Heroku doesn't
+        // set that by default, so this was verbosely dumping the FULL
+        // signal session (prekeys, base keys, raw Buffers) on every single
+        // message encrypt/decrypt operation. That's a huge amount of data
+        // to serialize constantly — burning CPU/memory and directly
+        // explaining the slow/no responses. Always silent now, matching
+        // the socket's own logger below.
+        const logger = pino({ level: 'silent' });
         const store = createStore();
 
         const conn = makeWASocket({
