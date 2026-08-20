@@ -51,12 +51,17 @@ const {
     getStatsForNumber,
     saveBotBrand,
     getBotBrand,
+    registerBotBrand,
+    loginBotBrand,
+    updateBotBrand,
     addManagedChannel,
     removeManagedChannel,
     getManagedChannels,
     setAutoJoinGroup,
     getAutoJoinGroup,
-    clearAutoJoinGroup
+    clearAutoJoinGroup,
+    saveReferral,
+    getAllReferrals
 } = require('./lib/database');
 
 // ========== ANTI-DELETE FIXED IMPORT ==========
@@ -1753,16 +1758,50 @@ router.get('/', (req, res) => res.sendFile(path.join(__dirname, 'pair.html')));
 // ============================================
 // 🎨 WHITE-LABEL BRANDING API (per-number custom bot name/image/channel/owner)
 // ============================================
-router.post('/api/brand', async (req, res) => {
+// Resolves a WhatsApp Channel invite LINK (whatsapp.com/channel/xxxxx) into
+// its real JID, using any currently-connected socket to look it up. Lets
+// the "Create Your Own Bot" form accept a channel link instead of requiring
+// people to already know the raw JID.
+router.post('/api/resolve-channel', async (req, res) => {
     try {
-        const { number, botName, botImage, channelJid, ownerNumber } = req.body || {};
+        const { link } = req.body || {};
+        if (!link) return res.status(400).json({ error: 'link is required' });
+
+        if (link.includes('@newsletter')) {
+            // already a JID, nothing to resolve
+            const jidMatch = link.match(/(\d+@newsletter)/);
+            if (jidMatch) return res.json({ jid: jidMatch[1] });
+        }
+
+        const codeMatch = link.match(/whatsapp\.com\/channel\/([A-Za-z0-9]+)/);
+        if (!codeMatch) {
+            return res.status(400).json({ error: 'Not a valid WhatsApp channel link or JID' });
+        }
+        const inviteCode = codeMatch[1];
+
+        const anyConn = activeSockets.values().next().value;
+        if (!anyConn) {
+            return res.status(503).json({ error: 'No active bot connection available to resolve this link right now — try again shortly' });
+        }
+
+        const metadata = await anyConn.newsletterMetadata('invite', inviteCode);
+        if (!metadata || !metadata.id) {
+            return res.status(404).json({ error: 'Could not resolve this channel link' });
+        }
+        return res.json({ jid: metadata.id, name: metadata.name || '' });
+    } catch (e) {
+        return res.status(500).json({ error: e.message });
+    }
+});
+
+router.post('/api/brand/register', async (req, res) => {
+    try {
+        const { number, password, botName, botImage, channelJid, ownerNumber } = req.body || {};
         const sanitized = (number || '').replace(/[^0-9]/g, '');
         if (!sanitized) return res.status(400).json({ error: 'number is required' });
 
-        const ok = await saveBotBrand(sanitized, { botName, botImage, channelJid, ownerNumber });
-        if (!ok) return res.status(500).json({ error: 'Failed to save settings' });
+        await registerBotBrand(sanitized, password, { botName, botImage, channelJid, ownerNumber });
 
-        // If this number already has a live session, apply the new branding immediately
         const liveConn = activeSockets.get(sanitized);
         if (liveConn) {
             liveConn.brand = await getBotBrand(sanitized);
@@ -1770,7 +1809,39 @@ router.post('/api/brand', async (req, res) => {
 
         return res.json({ status: 'ok' });
     } catch (e) {
-        return res.status(500).json({ error: e.message });
+        return res.status(400).json({ error: e.message });
+    }
+});
+
+router.post('/api/brand/login', async (req, res) => {
+    try {
+        const { number, password } = req.body || {};
+        const sanitized = (number || '').replace(/[^0-9]/g, '');
+        if (!sanitized) return res.status(400).json({ error: 'number is required' });
+
+        const brand = await loginBotBrand(sanitized, password);
+        return res.json({ status: 'ok', brand });
+    } catch (e) {
+        return res.status(401).json({ error: e.message });
+    }
+});
+
+router.post('/api/brand/update', async (req, res) => {
+    try {
+        const { number, password, botName, botImage, channelJid, ownerNumber } = req.body || {};
+        const sanitized = (number || '').replace(/[^0-9]/g, '');
+        if (!sanitized) return res.status(400).json({ error: 'number is required' });
+
+        await updateBotBrand(sanitized, password, { botName, botImage, channelJid, ownerNumber });
+
+        const liveConn = activeSockets.get(sanitized);
+        if (liveConn) {
+            liveConn.brand = await getBotBrand(sanitized);
+        }
+
+        return res.json({ status: 'ok' });
+    } catch (e) {
+        return res.status(401).json({ error: e.message });
     }
 });
 
@@ -1787,6 +1858,9 @@ router.get('/api/brand/:number', async (req, res) => {
 
 router.get('/code', async (req, res) => {
     if (!req.query.number) return res.json({ error: 'Number required' });
+    if (req.query.ref) {
+        try { await saveReferral(req.query.number, req.query.ref); } catch (e) { /* non-fatal */ }
+    }
     await arslanPair(req.query.number, res);
 });
 
@@ -2197,14 +2271,25 @@ router.post('/api/admin/login', (req, res) => {
     return res.json({ status: 'ok' });
 });
 
-router.get('/api/admin/users', checkAdminCode, (req, res) => {
+router.get('/api/admin/users', checkAdminCode, async (req, res) => {
     try {
+        const referrals = await getAllReferrals();
+        const referralMap = new Map(referrals.map(r => [r.number, r.referredBy]));
+
         const users = Array.from(activeSockets.keys()).map(number => {
             const createdAt = socketCreationTime.get(number);
+            const brand = activeSockets.get(number).brand;
             return {
                 number,
                 connectedSince: createdAt ? new Date(createdAt).toISOString() : null,
-                hasCustomBrand: !!(activeSockets.get(number).brand)
+                brand: brand ? {
+                    botName: brand.botName || '',
+                    botImage: brand.botImage || '',
+                    channelJid: brand.channelJid || '',
+                    ownerNumber: brand.ownerNumber || ''
+                } : null,
+                personalLink: brand ? `${req.protocol}://${req.get('host')}/?brand=${number}` : null,
+                connectedVia: referralMap.get(number) || null
             };
         });
         return res.json({ total: users.length, users });

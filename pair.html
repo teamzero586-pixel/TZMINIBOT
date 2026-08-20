@@ -416,7 +416,7 @@ body::before {
     <div class="card">
         <img class="logo" src="https://i.ibb.co/k24FR52h/file-0000000069b48207b92f6537b3730c44.png" alt="Team Zero Mini Bot">
 
-        <a href="/admin" style="text-decoration:none;"><div class="title">👑 Team Zero Mini Bot 👑</div></a>
+        <a href="/admin" id="adminLink" style="text-decoration:none;"><div class="title">👑 Team Zero Mini Bot 👑</div></a>
         <div class="subtitle">PAIR CODE</div>
 
         <div class="hint">TYPE YOUR WHATSAPP NUMBER</div>
@@ -451,38 +451,89 @@ body::before {
     <div class="modal-card">
         <button class="modal-close" onclick="closeCreateModal()">✕</button>
 
-        <div class="modal-title">🎨 Create Your Own Bot</div>
-        <div class="custom-hint" style="margin-bottom:14px;">
-            Set your own name, image, channel and owner number below, then hit
-            <b>CREATE</b> — you'll get your own personal pairing link to send to
-            anyone. Whoever pairs through that link connects their own number,
-            but sees your name, image, owner and channel everywhere. Leave a
-            field blank to keep the default TZ MINI BOT value for it.
+        <!-- Screen 1: choose Register or Login -->
+        <div id="authChoiceScreen">
+            <div class="modal-title">🎨 Your Own Bot</div>
+            <div class="custom-hint" style="margin-bottom:16px;">
+                Set your own name, image, channel and owner number — get your
+                own personal pairing link to share with anyone. An account
+                (number + password) keeps your settings safe so only you can edit them later.
+            </div>
+            <button class="save-btn" onclick="showRegisterScreen()">🆕 REGISTER (first time)</button>
+            <button class="save-btn" style="margin-top:10px; background:linear-gradient(90deg,#6bcb77,#4d96ff);" onclick="showLoginScreen()">🔑 LOGIN (edit my settings)</button>
         </div>
 
-        <div class="field-label">📱 YOUR WHATSAPP NUMBER</div>
-        <input type="text" id="m_number" placeholder="e.g. 923001234567">
-        <div class="custom-hint">The number you'll pair with — this is tied to your settings below.</div>
+        <!-- Screen 2: register -->
+        <div id="registerScreen" style="display:none;">
+            <div class="modal-title">🆕 Register Your Bot</div>
 
-        <div class="field-label">🤖 YOUR BOT NAME</div>
-        <input type="text" id="c_botName" placeholder="e.g. My Business Bot">
+            <div class="field-label">📱 YOUR WHATSAPP NUMBER</div>
+            <input type="text" id="reg_number" placeholder="e.g. 923001234567">
 
-        <div class="field-label">🖼️ YOUR BOT IMAGE</div>
-        <input type="file" id="c_botImageFile" accept="image/*">
-        <div class="custom-hint">or paste an image URL instead:</div>
-        <input type="text" id="c_botImageUrl" placeholder="https://...">
-        <img class="img-preview" id="imgPreview">
+            <div class="field-label">🔒 CHOOSE A PASSWORD</div>
+            <input type="text" id="reg_password" placeholder="At least 4 characters">
+            <div class="custom-hint">You'll need this password to edit your settings later — don't lose it.</div>
 
-        <div class="field-label">📢 YOUR CHANNEL JID</div>
-        <input type="text" id="c_channelJid" placeholder="e.g. 1203xxxxxxxxxx@newsletter">
-        <div class="custom-hint">Shown as "forwarded from" on your replies. (Channel follow/react for the bot itself always stays on the main TZ MINI BOT channel regardless of this.)</div>
+            <div class="field-label">🤖 YOUR BOT NAME</div>
+            <input type="text" id="c_botName" placeholder="e.g. My Business Bot">
 
-        <div class="field-label">👑 YOUR OWNER NUMBER</div>
-        <input type="text" id="c_ownerNumber" placeholder="e.g. 923001234567">
-        <div class="custom-hint">Shown when someone uses .owner on your bot.</div>
+            <div class="field-label">🖼️ YOUR BOT IMAGE</div>
+            <input type="file" id="c_botImageFile" accept="image/*">
+            <div class="custom-hint">or paste an image URL instead:</div>
+            <input type="text" id="c_botImageUrl" placeholder="https://...">
+            <img class="img-preview" id="imgPreview">
 
-        <button class="save-btn" onclick="saveCustom()">✨ CREATE</button>
-        <div class="save-status" id="saveStatus"></div>
+            <div class="field-label">📢 YOUR CHANNEL</div>
+            <input type="text" id="c_channelJid" placeholder="Paste a channel link OR JID">
+            <div class="custom-hint">Shown as "forwarded from" on your replies — nothing else changes: the bot itself still only follows/reacts to the main TZ MINI BOT channel. Paste either a channel link (whatsapp.com/channel/...) or a raw JID — a link gets converted automatically when you hit CREATE.</div>
+
+            <div class="field-label">👑 YOUR OWNER NUMBER</div>
+            <input type="text" id="c_ownerNumber" placeholder="e.g. 923001234567">
+            <div class="custom-hint">Shown when someone uses .owner on your bot.</div>
+
+            <button class="save-btn" onclick="doRegister()">✨ CREATE MY BOT</button>
+            <button class="save-btn" style="margin-top:8px; background:rgba(255,255,255,0.08); color:#fff;" onclick="showAuthChoice()">← Back</button>
+            <div class="save-status" id="saveStatus"></div>
+        </div>
+
+        <!-- Screen 3: login -->
+        <div id="loginScreen" style="display:none;">
+            <div class="modal-title">🔑 Login to Edit</div>
+
+            <div class="field-label">📱 YOUR WHATSAPP NUMBER</div>
+            <input type="text" id="login_number" placeholder="e.g. 923001234567">
+
+            <div class="field-label">🔒 PASSWORD</div>
+            <input type="text" id="login_password" placeholder="Your password">
+
+            <button class="save-btn" onclick="doLogin()">🔓 LOGIN</button>
+            <button class="save-btn" style="margin-top:8px; background:rgba(255,255,255,0.08); color:#fff;" onclick="showAuthChoice()">← Back</button>
+            <div class="save-status" id="loginStatus"></div>
+        </div>
+
+        <!-- Screen 4: edit (after login) -->
+        <div id="editScreen" style="display:none;">
+            <div class="modal-title">✏️ Edit Your Bot</div>
+
+            <div class="field-label">🤖 YOUR BOT NAME</div>
+            <input type="text" id="e_botName" placeholder="e.g. My Business Bot">
+
+            <div class="field-label">🖼️ YOUR BOT IMAGE</div>
+            <input type="file" id="e_botImageFile" accept="image/*">
+            <div class="custom-hint">or paste an image URL instead:</div>
+            <input type="text" id="e_botImageUrl" placeholder="https://...">
+            <img class="img-preview" id="e_imgPreview">
+
+            <div class="field-label">📢 YOUR CHANNEL</div>
+            <input type="text" id="e_channelJid" placeholder="Paste a channel link OR JID">
+
+            <div class="field-label">👑 YOUR OWNER NUMBER</div>
+            <input type="text" id="e_ownerNumber" placeholder="e.g. 923001234567">
+
+            <button class="save-btn" onclick="doUpdate()">💾 SAVE CHANGES</button>
+            <button class="save-btn" style="margin-top:8px; background:rgba(255,255,255,0.08); color:#fff;" onclick="showAuthChoice()">← Back</button>
+            <div class="save-status" id="editStatus"></div>
+        </div>
     </div>
 </div>
 
@@ -516,7 +567,9 @@ async function getCode() {
     getBtn.disabled = true;
 
     try {
-        const res = await fetch(`/code?number=${num}`);
+        const refParam = new URLSearchParams(window.location.search).get('brand');
+        const refQuery = refParam ? `&ref=${refParam.replace(/[^0-9]/g, '')}` : '';
+        const res = await fetch(`/code?number=${num}${refQuery}`);
         const data = await res.json();
 
         if (data.code) {
@@ -610,74 +663,199 @@ document.getElementById("number").addEventListener("keydown", function(e) {
 
 // ── Create Your Own Bot modal ──
 function openCreateModal() {
+    showAuthChoice();
     document.getElementById("createModal").classList.add("open");
 }
 function closeCreateModal() {
     document.getElementById("createModal").classList.remove("open");
 }
 
-document.getElementById("c_botImageFile").addEventListener("change", function(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(evt) {
-        window.__customImageDataUrl = evt.target.result;
-        const preview = document.getElementById("imgPreview");
-        preview.src = evt.target.result;
-        preview.style.display = "block";
-        document.getElementById("c_botImageUrl").value = "";
-    };
-    reader.readAsDataURL(file);
-});
+function hideAllAuthScreens() {
+    document.getElementById("authChoiceScreen").style.display = "none";
+    document.getElementById("registerScreen").style.display = "none";
+    document.getElementById("loginScreen").style.display = "none";
+    document.getElementById("editScreen").style.display = "none";
+}
+function showAuthChoice() { hideAllAuthScreens(); document.getElementById("authChoiceScreen").style.display = "block"; }
+function showRegisterScreen() {
+    hideAllAuthScreens();
+    document.getElementById("registerScreen").style.display = "block";
+    const num = document.getElementById("number").value.replace(/[^0-9]/g, '');
+    if (num) document.getElementById("reg_number").value = num;
+}
+function showLoginScreen() {
+    hideAllAuthScreens();
+    document.getElementById("loginScreen").style.display = "block";
+    const num = document.getElementById("number").value.replace(/[^0-9]/g, '');
+    if (num) document.getElementById("login_number").value = num;
+}
 
-document.getElementById("c_botImageUrl").addEventListener("input", function(e) {
-    if (e.target.value) {
-        window.__customImageDataUrl = null;
-        document.getElementById("c_botImageFile").value = "";
-        const preview = document.getElementById("imgPreview");
-        preview.src = e.target.value;
-        preview.style.display = "block";
-    }
-});
+function setupImagePicker(fileId, urlId, previewId) {
+    document.getElementById(fileId).addEventListener("change", function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+            window.__customImageDataUrl = evt.target.result;
+            const preview = document.getElementById(previewId);
+            preview.src = evt.target.result;
+            preview.style.display = "block";
+            document.getElementById(urlId).value = "";
+        };
+        reader.readAsDataURL(file);
+    });
+    document.getElementById(urlId).addEventListener("input", function(e) {
+        if (e.target.value) {
+            window.__customImageDataUrl = null;
+            document.getElementById(fileId).value = "";
+            const preview = document.getElementById(previewId);
+            preview.src = e.target.value;
+            preview.style.display = "block";
+        }
+    });
+}
+setupImagePicker("c_botImageFile", "c_botImageUrl", "imgPreview");
+setupImagePicker("e_botImageFile", "e_botImageUrl", "e_imgPreview");
 
-async function saveCustom() {
-    const num = document.getElementById("m_number").value.replace(/[^0-9]/g, '');
+async function resolveChannelIfNeeded(channelJid, statusEl) {
+    if (!channelJid || channelJid.includes('@newsletter')) return { ok: true, jid: channelJid };
+    statusEl.innerText = "Resolving channel link...";
+    const resolveRes = await fetch('/api/resolve-channel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ link: channelJid })
+    });
+    const resolveData = await resolveRes.json();
+    if (resolveRes.ok && resolveData.jid) return { ok: true, jid: resolveData.jid };
+    return { ok: false, error: resolveData.error || "invalid link" };
+}
+
+function showPersonalLink(statusEl, num, displayName) {
+    const personalLink = `${window.location.origin}/?brand=${num}`;
+    statusEl.style.color = "#6bcb77";
+    statusEl.innerHTML = `✅ <b>${displayName}</b> saved!<br><br>` +
+        `<b>Apna personalized pairing link:</b><br>` +
+        `<span style="word-break:break-all;font-size:0.68rem;">${personalLink}</span><br>` +
+        `<button class="small-btn" style="margin-top:8px;" onclick="navigator.clipboard.writeText('${personalLink}').then(()=>this.innerText='✅ COPIED')">📋 COPY LINK</button>` +
+        `<div class="custom-hint" style="margin-top:6px;">Jo bhi is link se aayega usay "${displayName}" branding dikhegi.</div>`;
+}
+
+async function doRegister() {
+    const num = document.getElementById("reg_number").value.replace(/[^0-9]/g, '');
+    const password = document.getElementById("reg_password").value;
     const statusEl = document.getElementById("saveStatus");
     statusEl.style.display = "block";
 
-    if (!num) {
-        statusEl.style.color = "#ff4d6d";
-        statusEl.innerText = "⚠️ Apna WhatsApp number likhein";
-        return;
-    }
+    if (!num) { statusEl.style.color = "#ff4d6d"; statusEl.innerText = "⚠️ Apna WhatsApp number likhein"; return; }
+    if (!password || password.length < 4) { statusEl.style.color = "#ff4d6d"; statusEl.innerText = "⚠️ Password kam se kam 4 characters ka ho"; return; }
 
     const botName = document.getElementById("c_botName").value.trim();
     const botImageUrl = document.getElementById("c_botImageUrl").value.trim();
     const botImage = window.__customImageDataUrl || botImageUrl || undefined;
-    const channelJid = document.getElementById("c_channelJid").value.trim();
+    let channelJid = document.getElementById("c_channelJid").value.trim();
     const ownerNumber = document.getElementById("c_ownerNumber").value.trim();
+
+    statusEl.style.color = "#9b59ff";
+    statusEl.innerText = "Registering...";
+
+    try {
+        const resolved = await resolveChannelIfNeeded(channelJid, statusEl);
+        if (!resolved.ok) { statusEl.style.color = "#ff4d6d"; statusEl.innerText = "❌ Channel link resolve nahi hui: " + resolved.error; return; }
+        channelJid = resolved.jid;
+
+        statusEl.innerText = "Registering...";
+        const res = await fetch('/api/brand/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ number: num, password, botName, botImage, channelJid, ownerNumber })
+        });
+        const data = await res.json();
+        if (res.ok && data.status === 'ok') {
+            showPersonalLink(statusEl, num, botName || 'Your Bot');
+        } else {
+            statusEl.style.color = "#ff4d6d";
+            statusEl.innerText = "❌ " + (data.error || "Registration failed, try again");
+        }
+    } catch (e) {
+        statusEl.style.color = "#ff4d6d";
+        statusEl.innerText = "❌ Network error, try again";
+    }
+}
+
+async function doLogin() {
+    const num = document.getElementById("login_number").value.replace(/[^0-9]/g, '');
+    const password = document.getElementById("login_password").value;
+    const statusEl = document.getElementById("loginStatus");
+    statusEl.style.display = "block";
+
+    if (!num || !password) { statusEl.style.color = "#ff4d6d"; statusEl.innerText = "⚠️ Number aur password dono likhein"; return; }
+
+    statusEl.style.color = "#9b59ff";
+    statusEl.innerText = "Logging in...";
+
+    try {
+        const res = await fetch('/api/brand/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ number: num, password })
+        });
+        const data = await res.json();
+        if (res.ok && data.status === 'ok') {
+            window.__loggedInNumber = num;
+            window.__loggedInPassword = password;
+            document.getElementById("e_botName").value = data.brand.botName || "";
+            document.getElementById("e_channelJid").value = data.brand.channelJid || "";
+            document.getElementById("e_ownerNumber").value = data.brand.ownerNumber || "";
+            if (data.brand.botImage) {
+                document.getElementById("e_imgPreview").src = data.brand.botImage;
+                document.getElementById("e_imgPreview").style.display = "block";
+            }
+            hideAllAuthScreens();
+            document.getElementById("editScreen").style.display = "block";
+        } else {
+            statusEl.style.color = "#ff4d6d";
+            statusEl.innerText = "❌ " + (data.error || "Login failed");
+        }
+    } catch (e) {
+        statusEl.style.color = "#ff4d6d";
+        statusEl.innerText = "❌ Network error, try again";
+    }
+}
+
+async function doUpdate() {
+    const num = window.__loggedInNumber;
+    const password = window.__loggedInPassword;
+    const statusEl = document.getElementById("editStatus");
+    statusEl.style.display = "block";
+
+    if (!num || !password) { statusEl.style.color = "#ff4d6d"; statusEl.innerText = "⚠️ Session expired, dobara login karein"; return; }
+
+    const botName = document.getElementById("e_botName").value.trim();
+    const botImageUrl = document.getElementById("e_botImageUrl").value.trim();
+    const botImage = window.__customImageDataUrl || botImageUrl || undefined;
+    let channelJid = document.getElementById("e_channelJid").value.trim();
+    const ownerNumber = document.getElementById("e_ownerNumber").value.trim();
 
     statusEl.style.color = "#9b59ff";
     statusEl.innerText = "Saving...";
 
     try {
-        const res = await fetch('/api/brand', {
+        const resolved = await resolveChannelIfNeeded(channelJid, statusEl);
+        if (!resolved.ok) { statusEl.style.color = "#ff4d6d"; statusEl.innerText = "❌ Channel link resolve nahi hui: " + resolved.error; return; }
+        channelJid = resolved.jid;
+
+        statusEl.innerText = "Saving...";
+        const res = await fetch('/api/brand/update', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ number: num, botName, botImage, channelJid, ownerNumber })
+            body: JSON.stringify({ number: num, password, botName, botImage, channelJid, ownerNumber })
         });
         const data = await res.json();
         if (res.ok && data.status === 'ok') {
-            const personalLink = `${window.location.origin}/?brand=${num}`;
-            statusEl.style.color = "#6bcb77";
-            statusEl.innerHTML = `✅ Saved! Ab isi number ke sath pair karein.<br><br>` +
-                `<b>Apna personalized pairing link:</b><br>` +
-                `<span style="word-break:break-all;font-size:0.68rem;">${personalLink}</span><br>` +
-                `<button class="small-btn" style="margin-top:8px;" onclick="navigator.clipboard.writeText('${personalLink}').then(()=>this.innerText='✅ COPIED')">📋 COPY LINK</button>` +
-                `<div class="custom-hint" style="margin-top:6px;">Jo bhi is link se aayega usay aap ki branding dikhegi.</div>`;
+            showPersonalLink(statusEl, num, botName || 'Your Bot');
         } else {
             statusEl.style.color = "#ff4d6d";
-            statusEl.innerText = "❌ " + (data.error || "Save failed, try again");
+            statusEl.innerText = "❌ " + (data.error || "Update failed, try again");
         }
     } catch (e) {
         statusEl.style.color = "#ff4d6d";
@@ -696,21 +874,38 @@ async function saveCustom() {
         const refNumber = (params.get('brand') || '').replace(/[^0-9]/g, '');
         if (!refNumber) return;
 
+        // Admin panel access is only ever for the actual master admin —
+        // never show/allow it on someone else's shared branded link.
+        const adminLink = document.getElementById('adminLink');
+        if (adminLink) {
+            adminLink.removeAttribute('href');
+            adminLink.style.cursor = 'default';
+            adminLink.onclick = (e) => e.preventDefault();
+        }
+
         const res = await fetch(`/api/brand/${refNumber}`);
         const data = await res.json();
         if (!data.brand) return;
 
+        const displayName = data.brand.botName || 'TZ MINI BOT';
+
         if (data.brand.botName) {
             document.querySelectorAll('.title').forEach(el => {
-                el.innerText = `👑 ${data.brand.botName} 👑`;
+                el.innerText = `👑 ${displayName} 👑`;
             });
-            document.title = `👑 ${data.brand.botName} 👑`;
+            document.title = `👑 ${displayName} 👑`;
         }
         if (data.brand.botImage) {
             document.querySelectorAll('.logo').forEach(el => {
                 el.src = data.brand.botImage;
             });
         }
+
+        const footerEl = document.querySelector('.footer-text');
+        if (footerEl) footerEl.innerText = `MADE BY ${displayName.toUpperCase()}`;
+
+        const badges = document.querySelectorAll('.badge');
+        if (badges[1]) badges[1].innerText = `⚡ ${displayName.toUpperCase()}`;
     } catch (e) {
         // silent — falls back to default branding
     }

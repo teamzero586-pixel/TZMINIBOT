@@ -115,6 +115,28 @@ body {
     font-weight:700;
     margin-left:6px;
 }
+.user-brand-block {
+    display:flex;
+    gap:10px;
+    margin-top:8px;
+    padding:8px;
+    background:rgba(255,255,255,0.03);
+    border-radius:10px;
+    border:1px solid rgba(255,255,255,0.06);
+}
+.user-brand-img {
+    width:44px;
+    height:44px;
+    border-radius:8px;
+    object-fit:cover;
+    flex-shrink:0;
+}
+.user-brand-info {
+    font-size:0.68rem;
+    line-height:1.6;
+    color:rgba(255,255,255,0.8);
+    word-break:break-all;
+}
 .empty { font-size:0.72rem; color:rgba(255,255,255,0.35); padding:8px 0; }
 
 .channel-row .jid { word-break:break-all; font-size:0.7rem; }
@@ -273,14 +295,29 @@ async function loadUsers() {
             el.innerHTML = '<div class="empty">No connected users right now</div>';
             return;
         }
-        el.innerHTML = data.users.map(u => `
-            <div class="user-row">
-                <div>
-                    <div class="num">+${u.number}${u.hasCustomBrand ? '<span class="badge-brand">CUSTOM</span>' : ''}</div>
+        el.innerHTML = data.users.map(u => {
+            const b = u.brand;
+            const brandBlock = b ? `
+                <div class="user-brand-block">
+                    ${b.botImage ? `<img class="user-brand-img" src="${b.botImage}">` : ''}
+                    <div class="user-brand-info">
+                        <div>🤖 ${b.botName || '(default name)'}</div>
+                        ${b.channelJid ? `<div class="jid">📢 ${b.channelJid}</div>` : ''}
+                        ${b.ownerNumber ? `<div>👑 Owner: +${b.ownerNumber}</div>` : ''}
+                        ${u.personalLink ? `<div class="jid">🔗 <a href="${u.personalLink}" target="_blank" style="color:#4d96ff;">${u.personalLink}</a></div>` : ''}
+                    </div>
+                </div>` : '';
+            return `
+            <div class="user-row" style="flex-direction:column; align-items:stretch;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div class="num">+${u.number}${b ? '<span class="badge-brand">CUSTOM</span>' : ''}</div>
                     <div class="meta">${u.connectedSince ? 'Connected ' + new Date(u.connectedSince).toLocaleString() : ''}</div>
                 </div>
+                ${u.connectedVia ? `<div class="meta">🔗 Connected via link of: +${u.connectedVia}</div>` : ''}
+                ${brandBlock}
             </div>
-        `).join('');
+        `;
+        }).join('');
     } catch (e) {
         el.innerHTML = '<div class="empty">❌ Failed to load users</div>';
     }
