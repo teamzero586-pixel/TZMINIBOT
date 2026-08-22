@@ -1,11 +1,13 @@
 /**
  * Video Downloader - Download video from YouTube
+ * Uses the exact same download logic as the working .yt command:
+ * Primary: @distube/ytdl-core (direct from YouTube)
+ * Fallback: https://backend1.tioo.eu.org (if ytdl-core fails)
  */
 
 const axios = require('axios');
 const yts = require('yt-search');
-const ytdl = require('ytdl-core');
-const APIs = require('../../utils/api');
+const ytdl = require('@distube/ytdl-core');
 
 function streamToBuffer(stream) {
   return new Promise((resolve, reject) => {
@@ -16,6 +18,65 @@ function streamToBuffer(stream) {
   });
 }
 
+const USER_AGENTS = [
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15',
+];
+
+async function fetchWithRetry(url, maxRetries = 3, timeout = 15000) {
+  let lastError;
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const userAgent = USER_AGENTS[(attempt - 1) % USER_AGENTS.length];
+      return await axios.get(url, { timeout, headers: { 'User-Agent': userAgent } });
+    } catch (err) {
+      lastError = err;
+      if (attempt === maxRetries) break;
+      await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt - 1) * 1000));
+    }
+  }
+  throw lastError;
+}
+
+// Download — tries ytdl-core first (direct from YouTube), then the backup API.
+// Identical to the .yt command's downloadYoutube() — kept in sync deliberately
+// so a fix to one applies to both.
+async function downloadYoutube(url) {
+  try {
+    const info = await ytdl.getInfo(url);
+    const durationSec = parseInt(info.videoDetails.lengthSeconds || '0', 10);
+    if (durationSec > 0 && durationSec <= 300) {
+      const stream = ytdl.downloadFromInfo(info, { quality: '18' }); // 360p progressive mp4, video+audio together
+      const buffer = await streamToBuffer(stream);
+      if (buffer && buffer.length > 0) {
+        return {
+          buffer,
+          title: info.videoDetails.title,
+          author: info.videoDetails.author?.name || 'Unknown',
+          thumbnail: info.videoDetails.thumbnails?.[0]?.url || null
+        };
+      }
+    }
+  } catch (e) {
+    console.log('ytdl-core failed for .video, trying backup API:', e.message);
+  }
+
+  // Fallback: third-party API
+  const apiUrl = `https://backend1.tioo.eu.org/YouTube?url=${encodeURIComponent(url)}`;
+  const response = await fetchWithRetry(apiUrl, 3, 20000);
+  const data = response.data;
+  if (!data?.status || !data?.mp4) {
+    throw new Error('Could not extract video — it may be unavailable or too long.');
+  }
+  const videoResp = await axios.get(data.mp4, { responseType: 'arraybuffer', timeout: 90000, maxContentLength: Infinity, maxBodyLength: Infinity });
+  return {
+    buffer: Buffer.from(videoResp.data),
+    title: data.title || 'YouTube Video',
+    author: data.author || 'Unknown',
+    thumbnail: data.thumbnail || null
+  };
+}
+
 module.exports = {
   name: 'video',
   aliases: ['ytmp4', 'ytvideo'],
@@ -23,7 +84,7 @@ module.exports = {
   description: 'Download video from YouTube',
   usage: '.video <name or link>',
 
-  async execute(sock, msg, args, extra) {
+  async execute(sock, msg, args) {
     const chatId = msg.key.remoteJid;
     try {
       const query = args.join(' ').trim();
@@ -33,84 +94,28 @@ module.exports = {
       }
 
       let videoUrl = '';
-      let videoTitle = '';
-      let videoThumbnail = '';
+      let thumbnail = '';
 
       if (query.includes('youtube.com') || query.includes('youtu.be')) {
         videoUrl = query;
-        videoTitle = 'YouTube Video';
       } else {
         const { videos } = await yts(query);
         if (!videos || videos.length === 0) {
           return await sock.sendMessage(chatId, { text: 'No videos found!' }, { quoted: msg });
         }
         videoUrl = videos[0].url;
-        videoTitle = videos[0].title;
-        videoThumbnail = videos[0].thumbnail;
+        thumbnail = videos[0].thumbnail;
       }
+
+      await sock.sendMessage(chatId, { text: `⏳ Downloading video...` }, { quoted: msg });
+
+      const videoInfo = await downloadYoutube(videoUrl);
 
       await sock.sendMessage(chatId, {
-        image: { url: videoThumbnail || 'https://i.ibb.co/k24FR52h/file-0000000069b48207b92f6537b3730c44.png' },
-        caption: `🎥 Downloading: *${videoTitle}*`
-      }, { quoted: msg });
-
-      let videoBuffer;
-      let finalTitle = videoTitle;
-      let downloadSuccess = false;
-
-      // ── Method 0: ytdl-core — downloads directly from YouTube, no
-      //    third-party API dependency, tried first. ──
-      try {
-        const info = await ytdl.getInfo(videoUrl);
-        const durationSec = parseInt(info.videoDetails.lengthSeconds || '0', 10);
-        if (durationSec > 0 && durationSec <= 300) {
-          const stream = ytdl.downloadFromInfo(info, { quality: '18' }); // 360p progressive mp4, video+audio together
-          videoBuffer = await streamToBuffer(stream);
-          if (videoBuffer && videoBuffer.length > 0) {
-            downloadSuccess = true;
-            finalTitle = info.videoDetails.title;
-          }
-        }
-      } catch (ytdlErr) {
-        console.log('ytdl-core failed, trying backup APIs:', ytdlErr.message);
-      }
-
-      // ── Fallback chain: third-party APIs, tried only if ytdl-core failed ──
-      if (!downloadSuccess) {
-        let videoData;
-        const apiMethods = [
-          { name: 'EliteProTech', method: () => APIs.getEliteProTechVideoByUrl(videoUrl) },
-          { name: 'Yupra', method: () => APIs.getYupraVideoByUrl(videoUrl) },
-          { name: 'Okatsu', method: () => APIs.getOkatsuVideoByUrl(videoUrl) }
-        ];
-
-        let apiDownloadSuccess = false;
-        for (const apiMethod of apiMethods) {
-          try {
-            videoData = await apiMethod.method();
-            if (videoData.download) {
-              apiDownloadSuccess = true;
-              break;
-            }
-          } catch (err) {
-            console.log(`${apiMethod.name} failed:`, err.message);
-          }
-        }
-
-        if (!apiDownloadSuccess) throw new Error('All download sources failed. The video may be unavailable or blocked.');
-
-        // Download as a Buffer instead of a raw {url} — more reliable, since
-        // some of these download hosts block hotlinking from WhatsApp itself.
-        const resp = await axios.get(videoData.download, { responseType: 'arraybuffer', timeout: 120000, maxContentLength: Infinity, maxBodyLength: Infinity });
-        videoBuffer = Buffer.from(resp.data);
-        finalTitle = videoData.title || videoTitle;
-      }
-
-      await sock.sendMessage(chatId, {
-        video: videoBuffer,
+        video: videoInfo.buffer,
         mimetype: 'video/mp4',
-        fileName: `${(finalTitle || 'video').replace(/[^\w\s-]/g, '')}.mp4`,
-        caption: `*${finalTitle}*\n\n> © TZ MINI BOT`
+        fileName: `${(videoInfo.title || 'video').replace(/[^\w\s-]/g, '')}.mp4`,
+        caption: `*${videoInfo.title}*\n\n> © TZ MINI BOT`
       }, { quoted: msg });
 
     } catch (error) {

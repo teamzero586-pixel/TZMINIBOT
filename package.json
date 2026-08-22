@@ -1,7 +1,7 @@
 {
   "name": "tz-mini-bot",
   "version": "2.0.0",
-  "description": "WhatsApp Bot Base — TZ MINI BOT, powered by Team Zero",
+  "description": "WhatsApp Bot Base \u2014 TZ MINI BOT, powered by Team Zero",
   "main": "index.js",
   "engines": {
     "node": "20.x"
@@ -13,16 +13,14 @@
     "@whiskeysockets/baileys": "latest",
     "axios": "latest",
     "body-parser": "^1.20.2",
-    "crypto": "latest",
     "cors": "latest",
-    "chalk": "latest",
+    "chalk": "^4.1.2",
     "dotenv": "latest",
     "express": "^4.18.2",
     "node-fetch": "^2.7.0",
     "sharp": "^0.32.6",
     "path": "^0.12.7",
-    "jimp": "latest",
-    "ytdl-core": "^4.11.5",
+    "@distube/ytdl-core": "^4.16.12",
     "node-telegram-bot-api": "^0.66.0",
     "fs-extra": "^11.2.0",
     "pino": "^8.17.0",

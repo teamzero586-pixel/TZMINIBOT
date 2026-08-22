@@ -4,10 +4,14 @@
   "logo": "https://i.ibb.co/k24FR52h/file-0000000069b48207b92f6537b3730c44.png",
   "repository": "https://github.com/teamzero586-pixel/TZMINIBOT",
   "keywords": ["TZ-MINI-BOT", "Team-Zero"],
+  "stack": "heroku-22",
   "success_url": "/", 
   "buildpacks": [
     { "url": "https://github.com/heroku/heroku-buildpack-nodejs#latest" }
   ],
+  "formation": {
+    "web": { "quantity": 1, "size": "eco" }
+  },
   "env": {      
     "MESSAGE": {
       "description": "Msg Attached With Session ID",

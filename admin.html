@@ -237,6 +237,11 @@ body {
     </div>
 
     <div class="section">
+        <h3>🐞 Bug Reports / Feature Requests <span class="count" id="feedbackCount">0</span> <button class="refresh-btn" onclick="loadFeedback()">refresh</button></h3>
+        <div id="feedbackList"><div class="empty">Loading...</div></div>
+    </div>
+
+    <div class="section">
         <h3>👪 Join All Connected Users to a Group</h3>
         <div class="empty" style="margin-bottom:8px;">Paste a WhatsApp group invite link — every connected number will attempt to join it.</div>
         <div class="input-row">
@@ -270,6 +275,7 @@ async function login() {
             loadUsers();
             loadChannels();
             loadAutoJoin();
+            loadFeedback();
         } else {
             errEl.style.display = "block";
         }
@@ -321,6 +327,61 @@ async function loadUsers() {
     } catch (e) {
         el.innerHTML = '<div class="empty">❌ Failed to load users</div>';
     }
+}
+
+async function loadFeedback() {
+    const el = document.getElementById("feedbackList");
+    try {
+        const res = await fetch('/api/admin/feedback', { headers: authHeaders() });
+        const data = await res.json();
+        const openCount = (data.items || []).filter(f => f.status !== 'done').length;
+        document.getElementById("feedbackCount").innerText = openCount;
+        if (!data.items || !data.items.length) {
+            el.innerHTML = '<div class="empty">No reports or requests yet</div>';
+            return;
+        }
+        el.innerHTML = data.items.map(f => `
+            <div class="user-row" style="flex-direction:column; align-items:stretch; opacity:${f.status === 'done' ? '0.55' : '1'};">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div class="num">+${f.number}${f.status === 'done' ? ' <span class="meta">(resolved)</span>' : ''}</div>
+                    <div class="meta">${new Date(f.createdAt).toLocaleString()}</div>
+                </div>
+                <div style="margin-top:6px; white-space:pre-wrap;">${escapeHtml(f.message)}</div>
+                <div class="input-row" style="margin-top:8px;">
+                    ${f.status === 'done'
+                        ? `<button class="small-btn" onclick="markFeedback('${f.id}','open')">↩️ REOPEN</button>`
+                        : `<button class="small-btn" onclick="markFeedback('${f.id}','done')">✅ MARK DONE</button>`}
+                    <button class="remove-btn" onclick="removeFeedback('${f.id}')">🗑️ DELETE</button>
+                </div>
+            </div>
+        `).join('');
+    } catch (e) {
+        el.innerHTML = '<div class="empty">❌ Failed to load reports</div>';
+    }
+}
+
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.innerText = str;
+    return div.innerHTML;
+}
+
+async function markFeedback(id, status) {
+    try {
+        await fetch(`/api/admin/feedback/${id}/status`, {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({ status })
+        });
+        loadFeedback();
+    } catch (e) { /* ignore */ }
+}
+
+async function removeFeedback(id) {
+    try {
+        await fetch(`/api/admin/feedback/${id}`, { method: 'DELETE', headers: authHeaders() });
+        loadFeedback();
+    } catch (e) { /* ignore */ }
 }
 
 async function loadChannels() {

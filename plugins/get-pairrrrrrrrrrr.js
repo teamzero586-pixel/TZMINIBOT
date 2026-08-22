@@ -31,10 +31,6 @@ cmd({
     filename: __filename
 }, async (conn, mek, m, { from, q, isGroup, senderNumber, reply }) => {
     try {
-        if (isGroup) {
-            return await reply("❌ This command only works in private chat. Please message me directly.");
-        }
-
         const phoneNumber = q ? q.trim().replace(/[^0-9]/g, '') : senderNumber.replace(/[^0-9]/g, '');
 
         if (!phoneNumber || phoneNumber.length < 10 || phoneNumber.length > 15) {
@@ -68,10 +64,6 @@ cmd({
     filename: __filename
 }, async (conn, mek, m, { from, q, isGroup, senderNumber, reply }) => {
     try {
-        if (isGroup) {
-            return await reply("❌ This command only works in private chat. Please message me directly.");
-        }
-
         await conn.sendMessage(from, { react: { text: "⏳", key: mek.key } });
 
         const phoneNumber = q ? q.trim().replace(/[^0-9]/g, '') : senderNumber.replace(/[^0-9]/g, '');

@@ -5,7 +5,7 @@
  */
 
 const axios = require('axios');
-const ytdl = require('ytdl-core');
+const ytdl = require('@distube/ytdl-core');
 const yts = require('yt-search');
 const config = require('../../../config');
 

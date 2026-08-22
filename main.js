@@ -51,6 +51,7 @@ const {
     getStatsForNumber,
     saveBotBrand,
     getBotBrand,
+    getBotBrandBySlug,
     registerBotBrand,
     loginBotBrand,
     updateBotBrand,
@@ -61,7 +62,11 @@ const {
     getAutoJoinGroup,
     clearAutoJoinGroup,
     saveReferral,
-    getAllReferrals
+    getAllReferrals,
+    saveFeedback,
+    getAllFeedback,
+    setFeedbackStatus,
+    deleteFeedback
 } = require('./lib/database');
 
 // ========== ANTI-DELETE FIXED IMPORT ==========
@@ -859,6 +864,18 @@ async function arslanPair(number, res = null) {
                 }
             } catch (error) {
                 console.error('[ANTIDELETE ERROR]', error.message);
+            }
+        });
+
+        // ========== WELCOME / GOODBYE ==========
+        // This was never wired up before — `.welcome`/`.goodbye` saved a
+        // setting but nothing ever listened for members joining/leaving, so
+        // no message was ever sent no matter what the setting was.
+        conn.ev.on('group-participants.update', async (update) => {
+            try {
+                await GroupEvents(conn, update, sanitizedNumber);
+            } catch (error) {
+                console.error('[GroupEvents] Error:', error.message);
             }
         });
 
@@ -1823,14 +1840,14 @@ router.post('/api/brand/register', async (req, res) => {
         const sanitized = (number || '').replace(/[^0-9]/g, '');
         if (!sanitized) return res.status(400).json({ error: 'number is required' });
 
-        await registerBotBrand(sanitized, password, { botName, botImage, channelJid, ownerNumber });
+        const slug = await registerBotBrand(sanitized, password, { botName, botImage, channelJid, ownerNumber });
 
         const liveConn = activeSockets.get(sanitized);
         if (liveConn) {
             liveConn.brand = await getBotBrand(sanitized);
         }
 
-        return res.json({ status: 'ok' });
+        return res.json({ status: 'ok', slug });
     } catch (e) {
         return res.status(400).json({ error: e.message });
     }
@@ -1857,12 +1874,13 @@ router.post('/api/brand/update', async (req, res) => {
 
         await updateBotBrand(sanitized, password, { botName, botImage, channelJid, ownerNumber });
 
+        const updatedBrand = await getBotBrand(sanitized);
         const liveConn = activeSockets.get(sanitized);
         if (liveConn) {
-            liveConn.brand = await getBotBrand(sanitized);
+            liveConn.brand = updatedBrand;
         }
 
-        return res.json({ status: 'ok' });
+        return res.json({ status: 'ok', slug: updatedBrand ? updatedBrand.slug : '' });
     } catch (e) {
         return res.status(401).json({ error: e.message });
     }
@@ -1873,6 +1891,37 @@ router.get('/api/brand/:number', async (req, res) => {
         const sanitized = (req.params.number || '').replace(/[^0-9]/g, '');
         if (!sanitized) return res.status(400).json({ error: 'number is required' });
         const brand = await getBotBrand(sanitized);
+        return res.json({ brand: brand || null });
+    } catch (e) {
+        return res.status(500).json({ error: e.message });
+    }
+});
+
+// Feedback / bug report / new-command or new-feature request — submitted
+// from the pairing page's edit screen (after login). Lands straight in the
+// admin panel's inbox.
+router.post('/api/brand/feedback', async (req, res) => {
+    try {
+        const { number, password, message } = req.body || {};
+        const sanitized = (number || '').replace(/[^0-9]/g, '');
+        if (!sanitized) return res.status(400).json({ error: 'number is required' });
+        // Re-use the same login check as every other authenticated action —
+        // proves this feedback is actually from the registered bot owner.
+        await loginBotBrand(sanitized, password);
+        await saveFeedback(sanitized, message);
+        return res.json({ status: 'ok' });
+    } catch (e) {
+        return res.status(401).json({ error: e.message });
+    }
+});
+
+// Public, name-based lookup for the ?brand=<slug> link — never reveals the
+// underlying WhatsApp number, only the cosmetic branding fields.
+router.get('/api/brand/by-slug/:slug', async (req, res) => {
+    try {
+        const slug = String(req.params.slug || '').trim().toLowerCase();
+        if (!slug) return res.status(400).json({ error: 'slug is required' });
+        const brand = await getBotBrandBySlug(slug);
         return res.json({ brand: brand || null });
     } catch (e) {
         return res.status(500).json({ error: e.message });
@@ -2311,11 +2360,41 @@ router.get('/api/admin/users', checkAdminCode, async (req, res) => {
                     channelJid: brand.channelJid || '',
                     ownerNumber: brand.ownerNumber || ''
                 } : null,
-                personalLink: brand ? `${req.protocol}://${req.get('host')}/?brand=${number}` : null,
+                personalLink: (brand && brand.slug) ? `${req.protocol}://${req.get('host')}/?brand=${brand.slug}` : null,
                 connectedVia: referralMap.get(number) || null
             };
         });
         return res.json({ total: users.length, users });
+    } catch (e) {
+        return res.status(500).json({ error: e.message });
+    }
+});
+
+// 🐞 Feedback inbox — bug reports / command errors / feature requests
+// submitted by registered bot owners from the pairing page.
+router.get('/api/admin/feedback', checkAdminCode, async (req, res) => {
+    try {
+        const items = await getAllFeedback();
+        return res.json({ total: items.length, items });
+    } catch (e) {
+        return res.status(500).json({ error: e.message });
+    }
+});
+
+router.post('/api/admin/feedback/:id/status', checkAdminCode, async (req, res) => {
+    try {
+        const { status } = req.body || {};
+        await setFeedbackStatus(req.params.id, status);
+        return res.json({ status: 'ok' });
+    } catch (e) {
+        return res.status(500).json({ error: e.message });
+    }
+});
+
+router.delete('/api/admin/feedback/:id', checkAdminCode, async (req, res) => {
+    try {
+        await deleteFeedback(req.params.id);
+        return res.json({ status: 'ok' });
     } catch (e) {
         return res.status(500).json({ error: e.message });
     }

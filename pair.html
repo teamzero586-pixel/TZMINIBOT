@@ -350,6 +350,21 @@ body::before {
 }
 .modal-card input[type="text"]::placeholder { color: rgba(255,255,255,0.3); }
 
+.modal-card textarea {
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 0.85rem;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.04);
+    color: #fff;
+    outline: none;
+    resize: vertical;
+    min-height: 80px;
+    font-family: inherit;
+}
+.modal-card textarea::placeholder { color: rgba(255,255,255,0.3); }
+
 .custom-hint {
     font-size: 0.62rem;
     color: rgba(255,255,255,0.4);
@@ -515,6 +530,8 @@ body::before {
         <div id="editScreen" style="display:none;">
             <div class="modal-title">✏️ Edit Your Bot</div>
 
+            <div class="save-status" id="editLoginLink" style="display:none;margin-bottom:14px;"></div>
+
             <div class="field-label">🤖 YOUR BOT NAME</div>
             <input type="text" id="e_botName" placeholder="e.g. My Business Bot">
 
@@ -531,8 +548,15 @@ body::before {
             <input type="text" id="e_ownerNumber" placeholder="e.g. 923001234567">
 
             <button class="save-btn" onclick="doUpdate()">💾 SAVE CHANGES</button>
-            <button class="save-btn" style="margin-top:8px; background:rgba(255,255,255,0.08); color:#fff;" onclick="showAuthChoice()">← Back</button>
             <div class="save-status" id="editStatus"></div>
+
+            <div class="field-label" style="margin-top:24px;">🐞 COMMAND ERROR / NEW COMMAND / NEW FEATURE</div>
+            <div class="custom-hint" style="margin-bottom:6px;">Kisi command mein masla ho, koi naya command ya future feature chahiye ho — yahan likhein, seedha admin panel mein pahunch jayega.</div>
+            <textarea id="feedbackMessage" placeholder="e.g. .song command error de raha hai / .translate command add karo / ..."></textarea>
+            <button class="save-btn" style="margin-top:8px;" onclick="doSendFeedback()">📨 SEND TO ADMIN</button>
+            <div class="save-status" id="feedbackStatus"></div>
+
+            <button class="save-btn" style="margin-top:16px; background:rgba(255,255,255,0.08); color:#fff;" onclick="showAuthChoice()">← Back</button>
         </div>
     </div>
 </div>
@@ -568,7 +592,7 @@ async function getCode() {
 
     try {
         const refParam = new URLSearchParams(window.location.search).get('brand');
-        const refQuery = refParam ? `&ref=${refParam.replace(/[^0-9]/g, '')}` : '';
+        const refQuery = refParam ? `&ref=${encodeURIComponent(refParam)}` : '';
         const res = await fetch(`/code?number=${num}${refQuery}`);
         const data = await res.json();
 
@@ -718,26 +742,38 @@ setupImagePicker("c_botImageFile", "c_botImageUrl", "imgPreview");
 setupImagePicker("e_botImageFile", "e_botImageUrl", "e_imgPreview");
 
 async function resolveChannelIfNeeded(channelJid, statusEl) {
+    // Already a raw JID (e.g. 1203xxxxxxxxx@newsletter) — fastest, most
+    // reliable path, no dependency on any bot being online right now.
     if (!channelJid || channelJid.includes('@newsletter')) return { ok: true, jid: channelJid };
+
+    // A channel LINK needs a currently-connected bot to resolve it into a
+    // JID. That's best-effort and can fail if no bot happens to be online
+    // at this exact moment — so a failure here must NOT block save/register.
+    // We just keep the link as typed and let the user know.
     statusEl.innerText = "Resolving channel link...";
-    const resolveRes = await fetch('/api/resolve-channel', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ link: channelJid })
-    });
-    const resolveData = await resolveRes.json();
-    if (resolveRes.ok && resolveData.jid) return { ok: true, jid: resolveData.jid };
-    return { ok: false, error: resolveData.error || "invalid link" };
+    try {
+        const resolveRes = await fetch('/api/resolve-channel', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ link: channelJid })
+        });
+        const resolveData = await resolveRes.json();
+        if (resolveRes.ok && resolveData.jid) return { ok: true, jid: resolveData.jid };
+        return { ok: true, jid: channelJid, warning: resolveData.error || "Link resolve nahi hui abhi — JID paste karein for guaranteed detection." };
+    } catch (e) {
+        return { ok: true, jid: channelJid, warning: "Link resolve nahi hui (network) — JID paste karein for guaranteed detection." };
+    }
 }
 
-function showPersonalLink(statusEl, num, displayName) {
-    const personalLink = `${window.location.origin}/?brand=${num}`;
+function showPersonalLink(statusEl, slugOrNum, displayName, warning) {
+    const personalLink = `${window.location.origin}/?brand=${encodeURIComponent(slugOrNum)}`;
     statusEl.style.color = "#6bcb77";
     statusEl.innerHTML = `✅ <b>${displayName}</b> saved!<br><br>` +
         `<b>Apna personalized pairing link:</b><br>` +
         `<span style="word-break:break-all;font-size:0.68rem;">${personalLink}</span><br>` +
         `<button class="small-btn" style="margin-top:8px;" onclick="navigator.clipboard.writeText('${personalLink}').then(()=>this.innerText='✅ COPIED')">📋 COPY LINK</button>` +
-        `<div class="custom-hint" style="margin-top:6px;">Jo bhi is link se aayega usay "${displayName}" branding dikhegi.</div>`;
+        `<div class="custom-hint" style="margin-top:6px;">Jo bhi is link se aayega usay "${displayName}" branding dikhegi.</div>` +
+        (warning ? `<div class="custom-hint" style="margin-top:6px;color:#ffb84d;">⚠️ ${warning}</div>` : '');
 }
 
 async function doRegister() {
@@ -771,7 +807,7 @@ async function doRegister() {
         });
         const data = await res.json();
         if (res.ok && data.status === 'ok') {
-            showPersonalLink(statusEl, num, botName || 'Your Bot');
+            showPersonalLink(statusEl, data.slug || num, botName || 'Your Bot', resolved.warning);
         } else {
             statusEl.style.color = "#ff4d6d";
             statusEl.innerText = "❌ " + (data.error || "Registration failed, try again");
@@ -812,6 +848,16 @@ async function doLogin() {
             }
             hideAllAuthScreens();
             document.getElementById("editScreen").style.display = "block";
+
+            const linkEl = document.getElementById("editLoginLink");
+            if (data.brand.slug) {
+                const personalLink = `${window.location.origin}/?brand=${encodeURIComponent(data.brand.slug)}`;
+                linkEl.style.display = "block";
+                linkEl.style.color = "#6bcb77";
+                linkEl.innerHTML = `<b>Apna personalized pairing link:</b><br>` +
+                    `<span style="word-break:break-all;font-size:0.68rem;">${personalLink}</span><br>` +
+                    `<button class="small-btn" style="margin-top:8px;" onclick="navigator.clipboard.writeText('${personalLink}').then(()=>this.innerText='✅ COPIED')">📋 COPY LINK</button>`;
+            }
         } else {
             statusEl.style.color = "#ff4d6d";
             statusEl.innerText = "❌ " + (data.error || "Login failed");
@@ -852,7 +898,7 @@ async function doUpdate() {
         });
         const data = await res.json();
         if (res.ok && data.status === 'ok') {
-            showPersonalLink(statusEl, num, botName || 'Your Bot');
+            showPersonalLink(statusEl, data.slug || num, botName || 'Your Bot', resolved.warning);
         } else {
             statusEl.style.color = "#ff4d6d";
             statusEl.innerText = "❌ " + (data.error || "Update failed, try again");
@@ -863,16 +909,54 @@ async function doUpdate() {
     }
 }
 
-// ── Personalized branding via ?brand=<number> in the URL ──
-// If someone opens a shared link like yoursite.com/?brand=923xxxxxxxxx,
-// show that number's saved custom name/image on this page instead of the
+async function doSendFeedback() {
+    const num = window.__loggedInNumber;
+    const password = window.__loggedInPassword;
+    const statusEl = document.getElementById("feedbackStatus");
+    statusEl.style.display = "block";
+
+    if (!num || !password) { statusEl.style.color = "#ff4d6d"; statusEl.innerText = "⚠️ Session expired, dobara login karein"; return; }
+
+    const messageEl = document.getElementById("feedbackMessage");
+    const message = messageEl.value.trim();
+    if (!message) { statusEl.style.color = "#ff4d6d"; statusEl.innerText = "⚠️ Pehle message likhein"; return; }
+
+    statusEl.style.color = "#9b59ff";
+    statusEl.innerText = "Sending...";
+
+    try {
+        const res = await fetch('/api/brand/feedback', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ number: num, password, message })
+        });
+        const data = await res.json();
+        if (res.ok && data.status === 'ok') {
+            statusEl.style.color = "#6bcb77";
+            statusEl.innerText = "✅ Admin panel ko bhej diya gaya!";
+            messageEl.value = "";
+        } else {
+            statusEl.style.color = "#ff4d6d";
+            statusEl.innerText = "❌ " + (data.error || "Bhejne mein masla, dobara koshish karein");
+        }
+    } catch (e) {
+        statusEl.style.color = "#ff4d6d";
+        statusEl.innerText = "❌ Network error, try again";
+    }
+}
+
+// ── Personalized branding via ?brand=<name-slug> in the URL ──
+// If someone opens a shared link like yoursite.com/?brand=my-cool-bot,
+// show that bot's saved custom name/image on this page instead of the
 // default TZ MINI BOT branding — the person can still pair their OWN
 // number as normal; only the cosmetic branding shown here changes.
+// Old links shared before this update used the raw number instead of a
+// name (yoursite.com/?brand=923xxxxxxxxx) — those still work too.
 (async function applyReferralBranding() {
     try {
         const params = new URLSearchParams(window.location.search);
-        const refNumber = (params.get('brand') || '').replace(/[^0-9]/g, '');
-        if (!refNumber) return;
+        const refValue = (params.get('brand') || '').trim();
+        if (!refValue) return;
 
         // Admin panel access is only ever for the actual master admin —
         // never show/allow it on someone else's shared branded link.
@@ -883,7 +967,14 @@ async function doUpdate() {
             adminLink.onclick = (e) => e.preventDefault();
         }
 
-        const res = await fetch(`/api/brand/${refNumber}`);
+        // New links are name-based slugs; old links (shared before this
+        // update) were plain digits — try the right lookup for each.
+        const isOldNumericLink = /^[0-9]+$/.test(refValue);
+        const endpoint = isOldNumericLink
+            ? `/api/brand/${refValue}`
+            : `/api/brand/by-slug/${encodeURIComponent(refValue.toLowerCase())}`;
+
+        const res = await fetch(endpoint);
         const data = await res.json();
         if (!data.brand) return;
 
